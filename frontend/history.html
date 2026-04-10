@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lịch sử Điểm danh</title>
+  <link rel="stylesheet" href="./src/css/style.css">
+  <script type="module" src="./src/js/history.js"></script>
+</head>
+<body>
+  
+  <nav class="sidebar">
+    <div class="logo">BK Attendance</div>
+    <ul class="nav-links">
+      <li><a href="index.html">📍 Dashboard</a></li>
+      <li><a href="students.html">👥 Quản lý Sinh viên</a></li>
+      <li><a href="history.html" class="active">🕒 Lịch sử</a></li>
+    </ul>
+  </nav>
+
+  <main class="main-content">
+    <div class="header">
+      <h1>Lịch sử toàn bộ</h1>
+    </div>
+
+    <div class="glass-card">
+      <h2 style="margin-bottom: 1.5rem; color: #fff;">Nhật ký hệ thống</h2>
+      <div class="table-container">
+        <table id="history-table">
+          <thead>
+            <tr>
+              <th>Log ID</th>
+              <th>MSSV</th>
+              <th>Họ tên</th>
+              <th>Thời gian</th>
+              <th>Trạng thái</th>
+            </tr>
+          </thead>
+          <tbody id="history-body">
+            <!-- Render by JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+</body>
+</html>

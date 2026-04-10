@@ -1,0 +1,18 @@
+{
+  "name": "bkattendance-backend",
+  "version": "1.0.0",
+  "description": "Backend cho hệ thống điểm danh",
+  "main": "server.js",
+  "scripts": {
+    "start": "nodemon server.js",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "socket.io": "^4.7.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}

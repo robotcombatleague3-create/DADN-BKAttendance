@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quản lý Sinh viên</title>
+  <link rel="stylesheet" href="./src/css/style.css">
+  <script type="module" src="./src/js/students.js"></script>
+</head>
+<body>
+  
+  <nav class="sidebar">
+    <div class="logo">BK Attendance</div>
+    <ul class="nav-links">
+      <li><a href="index.html">📍 Dashboard</a></li>
+      <li><a href="students.html" class="active">👥 Quản lý Sinh viên</a></li>
+      <li><a href="history.html">🕒 Lịch sử</a></li>
+    </ul>
+  </nav>
+
+  <main class="main-content">
+    <div class="header">
+      <h1>Quản lý Sinh viên</h1>
+    </div>
+
+    <div class="flash-container" id="flash-container"></div>
+
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;">
+      <div class="glass-card">
+        <h2 style="margin-bottom: 1.5rem;">Danh sách sinh viên</h2>
+        <div class="table-container">
+          <table id="students-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>MSSV</th>
+                <th>Họ tên</th>
+                <th>Mã RFID</th>
+                <th>Hành động</th>
+              </tr>
+            </thead>
+            <tbody id="students-body">
+              <!-- Render by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="glass-card">
+        <h2 style="margin-bottom: 1.5rem;">Gán mã RFID</h2>
+        <form id="assign-form">
+          <div class="form-group">
+            <label>Sinh viên ID (<span id="selected-student-name">Chưa chọn</span>)</label>
+            <input type="text" id="student-id" placeholder="VD: 1, 2, 3..." required readonly>
+          </div>
+          <div class="form-group">
+            <label>Mã UID Thẻ (Quét thẻ hoặc nhập)</label>
+            <input type="text" id="rfid-uid" placeholder="VD: A1B2C3D4" required>
+          </div>
+          <button type="submit" class="btn" style="width: 100%">Gán Thẻ</button>
+        </form>
+      </div>
+    </div>
+  </main>
+
+</body>
+</html>
