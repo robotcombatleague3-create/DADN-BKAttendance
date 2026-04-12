@@ -31,25 +31,3 @@ export const formatDateTime = (isoString) => {
 export const getStatusClass = (status) => {
   return status === 'Hợp lệ' ? 'valid' : 'invalid';
 };
-
-export const showFlashMessage = (message, type = 'success') => {
-  const container = document.getElementById('flash-container');
-  if (!container) return;
-
-  const msgDiv = document.createElement('div');
-  msgDiv.className = `flash-message ${type}`;
-  msgDiv.innerText = message;
-  
-  if (type === 'error') {
-    msgDiv.style.borderColor = '#EF4444';
-  }
-
-  container.appendChild(msgDiv);
-
-  // Auto remove sau khi animation fadeOut hoàn tất (3.5s tổng)
-  setTimeout(() => {
-    if (container.contains(msgDiv)) {
-      container.removeChild(msgDiv);
-    }
-  }, 3500);
-};
