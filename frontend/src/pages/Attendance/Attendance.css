@@ -1,0 +1,356 @@
+/* Container chung cho các màn hình Attendance */
+.content-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+/* Home.jsx - Màn hình Khởi động */
+.home-card {
+  background-color: white;
+  border-radius: 12px;
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+.home-img {
+  max-width: 60%;
+  max-height: 70vh;
+  object-fit: contain;
+}
+
+/* AttendanceList.jsx */
+.list-card {
+  background-color: white;
+  border-radius: 12px;
+  flex: 1;
+  padding: 24px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  display: flex;
+  flex-direction: column;
+}
+
+.list-topbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 24px;
+}
+
+.list-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: white;
+  padding: 10px 16px;
+  border-radius: 8px;
+  color: #334155;
+  cursor: pointer;
+  border: 1px solid #cbd5e1;
+  font-weight: 500;
+  outline: none;
+  min-width: 200px;
+}
+
+.list-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.list-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.list-row:hover {
+  background-color: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.row-left {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.row-title {
+  font-weight: bold;
+  font-size: 1.15rem;
+  color: #0f172a;
+}
+
+.row-meta {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  font-size: 0.95rem;
+  color: #475569;
+}
+
+.row-student-count {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.row-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+}
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.status-dot.online { background-color: #22c55e; }
+.status-dot.offline { background-color: #94a3b8; }
+
+.row-right {
+  font-weight: 600;
+  color: #334155;
+  font-size: 1.05rem;
+}
+
+/* AttendanceDetail.jsx */
+.detail-grid {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 24px;
+  flex: 1;
+}
+
+/* Col Left */
+.summary-col {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.summary-card {
+  background-color: white;
+  border-radius: 12px;
+  padding: 24px 20px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+.summary-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.summary-icon.total { background-color: #e0f2fe; color: #0284c7; }
+.summary-icon.present { background-color: #dcfce7; color: #16a34a; }
+.summary-icon.absent { background-color: #fee2e2; color: #dc2626; }
+
+.summary-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.summary-info span:first-child {
+  font-size: 1.7rem;
+  font-weight: bold;
+  color: #0f172a;
+}
+.summary-info span:last-child {
+  font-size: 0.95rem;
+  color: #475569;
+  font-weight: 500;
+}
+
+/* Col Right - Main Board */
+.main-board {
+  background-color: white;
+  border-radius: 12px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+.board-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.board-title {
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: #0f172a;
+}
+
+.board-controls {
+  display: flex;
+  gap: 12px;
+}
+
+.board-btn {
+  padding: 10px 16px;
+  border: 1px solid #cbd5e1;
+  background-color: white;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  color: #334155;
+  transition: background-color 0.2s;
+  font-size: 0.95rem;
+}
+.board-btn:hover {
+  background-color: #f8fafc;
+}
+
+.board-search {
+  padding: 10px 16px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  outline: none;
+  min-width: 260px;
+  font-size: 0.95rem;
+}
+
+.table-container {
+  flex: 1;
+  overflow-x: auto;
+}
+
+.attendance-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.attendance-table th, .attendance-table td {
+  padding: 14px 16px;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.attendance-table th {
+  color: #475569;
+  font-weight: 600;
+  font-size: 0.95rem;
+  background-color: #f8fafc;
+}
+
+.th-flex {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.status-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.status-badge.present {
+  background-color: #dcfce7;
+  color: #16a34a;
+}
+.status-badge.absent {
+  background-color: #f1f5f9; 
+  color: #dc2626;
+}
+.status-badge.late {
+  background-color: #f1f5f9; 
+  color: #d97706;
+}
+
+.board-bottom {
+  display: flex;
+  justify-content: center;
+  padding-top: 24px;
+  margin-top: auto;
+}
+
+.pagination {
+  display: flex;
+  gap: 8px;
+}
+.page-item {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #334155;
+  font-weight: 500;
+}
+.page-item.active {
+  background-color: #096395;
+  color: white;
+  border-color: #096395;
+}
+
+/* AttendanceStats.jsx */
+.stats-card {
+  background-color: white;
+  border-radius: 12px;
+  padding: 24px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+.stats-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.stats-legend {
+  display: flex;
+  gap: 20px;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #334155;
+}
+.legend-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+}
+.legend-color.present { background-color: #8884d8; /* thay bằng xanh lợt khi render chart */ }
+.legend-color.absent { background-color: #ef4444; }
+
+.chart-container {
+  flex: 1;
+  width: 100%;
+  min-height: 400px;
+}

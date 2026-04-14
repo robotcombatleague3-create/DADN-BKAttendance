@@ -6,7 +6,7 @@ function Sidebar() {
       <div className="logo">BK Attendance</div>
       <ul className="nav-links">
         <li>
-          <NavLink to="/" className={({ isActive }) => (isActive ? 'active' : '')}>
+          <NavLink to="/dashboard" className={({ isActive }) => (isActive ? 'active' : '')}>
             📍 Dashboard
           </NavLink>
         </li>

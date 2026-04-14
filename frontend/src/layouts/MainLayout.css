@@ -1,0 +1,110 @@
+/* Utility Classes for Full-Screen Layout */
+.min-h-screen { min-height: 100vh; }
+.w-full { width: 100%; }
+.h-full { height: 100%; }
+.flex-1 { flex: 1; }
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+
+/* Layout chính sau đăng nhập (Header, Body, Footer) */
+.main-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  margin: 0;
+  font-family: inherit;
+}
+
+/* Header / Topbar */
+.main-topbar {
+  height: 64px;
+  background-color: #096395;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 40px;
+  color: white;
+}
+
+/* Left - Logo */
+.topbar-left {
+  display: flex;
+  align-items: center;
+}
+.topbar-logo-img {
+  height: 40px;
+  object-fit: contain;
+}
+
+/* Center - Nav Links */
+.topbar-center {
+  display: flex;
+  gap: 30px;
+}
+.topbar-nav-link {
+  color: white;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 1.05rem;
+  padding-bottom: 4px;
+  border-bottom: 2px solid transparent;
+  transition: border-bottom 0.2s;
+}
+.topbar-nav-link.active {
+  border-bottom: 2px solid white;
+}
+.topbar-nav-link:hover {
+  opacity: 0.8;
+}
+
+/* Right - User Info */
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.topbar-bell-icon {
+  cursor: pointer;
+  color: white;
+}
+.topbar-user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.topbar-user-name {
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+.topbar-avatar {
+  background-color: #fff;
+  color: #096395;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+/* Body */
+.main-body {
+  flex: 1; /* Chiếm hết chiều cao còn lại */
+  background-color: #9dd5f0;
+  padding: 30px 40px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Footer */
+.main-footer {
+  background-color: #7d7d7d;
+  height: 60px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #fff;
+  font-size: 0.9rem;
+}

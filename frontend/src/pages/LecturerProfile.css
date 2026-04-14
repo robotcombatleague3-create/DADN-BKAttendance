@@ -1,0 +1,156 @@
+/* Simulated Layout utilities mimicking Bootstrap spacing and Flat Design */
+
+.profile-page-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  padding: 20px 0;
+}
+
+.profile-card {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.06);
+  width: 1200px;
+  max-width: 100%;
+  min-height: 650px;
+  display: flex;
+  overflow: hidden;
+}
+
+/* Left Column */
+.profile-left-col {
+  width: 320px; /* ~27% of 1200 */
+  background: #ffffff;
+  padding: 80px 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  border-right: 1px solid #f1f5f9;
+}
+
+.profile-avatar {
+  width: 160px;
+  height: 160px;
+  background-color: #fce7f3; /* Nền hồng nhạt */
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #ec4899;
+  margin-bottom: 30px;
+}
+
+.profile-name {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 10px;
+}
+
+.profile-id {
+  font-size: 1.15rem;
+  color: #64748b;
+  margin-bottom: 6px;
+}
+
+.profile-sub-id {
+  font-size: 1rem;
+  color: #94a3b8; /* xám lợt hơn */
+}
+
+/* Right Column */
+.profile-right-col {
+  flex: 1;
+  padding: 70px 60px;
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-header-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #334155; /* Xám đậm */
+  margin-bottom: 40px;
+}
+
+.profile-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  flex: 1;
+}
+
+/* Flex justify-between emulation */
+.profile-history-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f8fafc;
+}
+
+.profile-history-date {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #475569; /* xám đậm */
+}
+
+.profile-history-detail-group {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.profile-history-text {
+  font-size: 1.05rem;
+  color: #64748b; /* xám vừa */
+}
+
+.profile-icon {
+  color: #94a3b8;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.profile-icon:hover {
+  color: #334155;
+}
+
+/* Pagination */
+.profile-pagination {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  margin-top: 40px;
+}
+
+.profile-page-item {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 1.05rem;
+  font-weight: 600;
+  transition: background-color 0.2s;
+}
+
+.profile-page-item.active {
+  background-color: #334155; /* Đen xám */
+  color: #ffffff;
+}
+
+.profile-page-item.inactive {
+  background-color: transparent;
+  color: #0f172a; /* Chữ đen không nền */
+}
+
+.profile-page-item.inactive:hover {
+  background-color: #f1f5f9;
+}

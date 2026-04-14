@@ -1,0 +1,177 @@
+/* Hệ thống màu sắc và layout chung cho luồng Auth */
+.auth-page {
+  --header-bg: #096395;
+  --body-bg: #9dd5f0;
+  --card-bg: #ffb703;
+  --footer-bg: #7d7d7d;
+
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  margin: 0;
+  font-family: inherit;
+}
+
+/* Header */
+.auth-header {
+  height: 64px;
+  background-color: var(--header-bg);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 40px;
+}
+
+.auth-logo {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.auth-logo-img {
+  height: 40px;
+  object-fit: contain;
+}
+
+.auth-header-login-link {
+  color: white;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.auth-header-login-link:hover {
+  text-decoration: underline;
+}
+
+/* Body */
+.auth-body {
+  flex: 1; /* Chiếm phần chiều cao còn lại */
+  background-color: var(--body-bg);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  padding: 20px;
+}
+
+/* Footer (cho Landing) */
+.auth-footer {
+  background-color: var(--footer-bg);
+  height: 60px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #fff;
+  font-size: 0.9rem;
+}
+
+/* Landing Page - Hình ảnh */
+.auth-landing-img {
+  max-width: 80%;
+  max-height: 60vh;
+  object-fit: contain;
+}
+
+/* Role Selection - Thẻ quyền */
+.auth-roles-container {
+  display: flex;
+  gap: 80px; /* Khoảng cách giữa 2 thẻ khá rộng */
+  flex-wrap: wrap; /* Cho di động */
+  justify-content: center;
+}
+
+.auth-role-card {
+  background-color: var(--card-bg);
+  width: 280px;
+  height: 320px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  border-radius: 16px;
+  text-decoration: none;
+  color: black;
+  transition: transform 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.auth-role-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+.auth-role-icon {
+  width: 120px;
+  height: 120px;
+  margin-bottom: 30px;
+  object-fit: contain;
+}
+
+.auth-role-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+/* Login Form */
+.auth-login-form-container {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+}
+
+.auth-form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 24px;
+}
+
+.auth-form-group label {
+  color: black;
+  margin-bottom: 8px;
+  font-weight: 500;
+  text-align: left;
+}
+
+.auth-form-group input {
+  background-color: white;
+  border: none;
+  border-radius: 8px; /* Bo góc nhẹ */
+  padding: 14px 16px;
+  font-size: 1rem;
+  outline: none;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.auth-form-group input::placeholder {
+  color: #a0a0a0;
+}
+
+.auth-submit-btn {
+  background-color: var(--header-bg);
+  color: white;
+  border: none;
+  border-radius: 8px; /* Bo góc nhẹ */
+  padding: 14px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 8px;
+  transition: opacity 0.2s;
+}
+
+.auth-submit-btn:hover {
+  opacity: 0.9;
+}
+
+.auth-forgot-link {
+  text-align: center;
+  margin-top: 20px;
+  color: black;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
