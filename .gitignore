@@ -1,2 +1,9 @@
-node_modules
+node_modules/
+backend/node_modules/
+frontend/node_modules/
+.env
+.env.*
+dist/
 frontend/dist/
+.DS_Store
+*.log

@@ -26,10 +26,11 @@ export default function Dashboard() {
     const handleNewAttendance = (newLog) => {
       setLogs(prev => [{ ...newLog, isNew: true }, ...prev]);
       
-      const msgText = newLog.status === 'Hợp lệ' 
-        ? `✅ Điểm danh thành công: ${newLog.fullName}`
+      const isSuccess = newLog.status === 'Present' || newLog.status === 'Late';
+      const msgText = isSuccess 
+        ? `✅ Điểm danh: ${newLog.student_name}`
         : `⚠️ Cảnh báo: ${newLog.status}`;
-      const msgType = newLog.status === 'Hợp lệ' ? 'success' : 'error';
+      const msgType = isSuccess ? 'success' : 'error';
       showFlashMessage(msgText, msgType);
     };
 
@@ -52,20 +53,20 @@ export default function Dashboard() {
           <table>
             <thead>
               <tr>
-                <th>ID</th>
                 <th>MSSV</th>
                 <th>Họ tên</th>
+                <th>Lớp học</th>
                 <th>Thời gian</th>
                 <th>Trạng thái</th>
               </tr>
             </thead>
             <tbody>
               {logs.map((log, index) => (
-                <tr key={`${log.id}-${index}`} className={log.isNew ? 'new-row' : ''}>
-                  <td>{log.id}</td>
-                  <td><strong>{log.studentCode}</strong></td>
-                  <td>{log.fullName}</td>
-                  <td>{formatDateTime(log.timestamp)}</td>
+                <tr key={`${log.student_id}-${index}`} className={log.isNew ? 'new-row' : ''}>
+                  <td><strong>{log.student_code}</strong></td>
+                  <td>{log.student_name}</td>
+                  <td>{log.class_name}</td>
+                  <td>{formatDateTime(log.checkin_time)}</td>
                   <td><span className={`status ${getStatusClass(log.status)}`}>{log.status}</span></td>
                 </tr>
               ))}

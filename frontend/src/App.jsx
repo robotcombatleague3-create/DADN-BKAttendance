@@ -12,6 +12,7 @@ import Home from './pages/Attendance/Home';
 import AttendanceList from './pages/Attendance/AttendanceList';
 import AttendanceDetail from './pages/Attendance/AttendanceDetail';
 import AttendanceStats from './pages/Attendance/AttendanceStats';
+import TestRFID from './pages/TestRFID';
 
 // Auth Pages
 import Landing from './pages/Auth/Landing';
@@ -85,6 +86,7 @@ function App() {
             <Route path="students" element={<Students />} />
             <Route path="profile" element={<LecturerProfile />} />
           </Route>
+          <Route path="/test-rfid" element={<TestRFID />} />
         </Routes>
       </Router>
     </FlashContext.Provider>

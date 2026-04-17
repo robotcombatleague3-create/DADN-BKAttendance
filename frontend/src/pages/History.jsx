@@ -35,20 +35,20 @@ export default function History() {
           <table>
             <thead>
               <tr>
-                <th>Log ID</th>
                 <th>MSSV</th>
                 <th>Họ tên</th>
+                <th>Lớp học</th>
                 <th>Thời gian</th>
                 <th>Trạng thái</th>
               </tr>
             </thead>
             <tbody>
               {logs.map((log, index) => (
-                <tr key={`${log.id}-${index}`}>
-                  <td>{log.id}</td>
-                  <td><strong>{log.studentCode}</strong></td>
-                  <td>{log.fullName}</td>
-                  <td>{formatDateTime(log.timestamp)}</td>
+                <tr key={`${log.session_id}-${log.student_id}-${index}`}>
+                  <td><strong>{log.student_code}</strong></td>
+                  <td>{log.student_name}</td>
+                  <td>{log.class_name}</td>
+                  <td>{formatDateTime(log.checkin_time)}</td>
                   <td><span className={`status ${getStatusClass(log.status)}`}>{log.status}</span></td>
                 </tr>
               ))}

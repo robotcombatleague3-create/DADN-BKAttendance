@@ -51,8 +51,15 @@ npm start
 - **Backend:** `http://localhost:3000`
 
 ## Các tính năng nổi bật đã hoàn thiện
+- [x] **Real-time MQTT Integration:** Hiển thị dữ liệu quét thẻ trực tiếp từ HiveMQ Broker lên giao diện Web.
+- [x] **Giao diện Kiểm thử RFID:** Trang `/test-rfid` tích hợp log MQTT trực tiếp và tự động xử lý điểm danh.
 - [x] **Giao diện Bootstrap 5:** Đồng bộ, hiện đại và hỗ trợ tốt cho di động.
 - [x] **Hệ thống Phân quyền:** Tách biệt hoàn toàn luồng nghiệp vụ cho Admin và Giảng viên.
 - [x] **Tìm kiếm & Lọc:** Hỗ trợ lọc danh sách sinh viên, giảng viên và lớp học trực tiếp trên Browser.
-- [x] **Giả lập RFID:** Tính năng quét thẻ ảo tích hợp trong các Modal chỉnh sửa thông tin.
 - [x] **Biểu đồ thống kê:** Trực quan hóa dữ liệu điểm danh bằng Recharts.
+
+## Cấu hình MQTT (kiểm thử)
+Hệ thống kết nối tới Broker công cộng để nhận dữ liệu từ ESP32:
+- **Broker:** `mqtt://broker.hivemq.com`
+- **Topic:** `test/vinh/mqtt`
+- **Định dạng tin nhắn:** `uidHash: <DECIMAL_UID>` (Hệ thống tự động convert DEC -> HEX và xử lý quét thẻ).

@@ -29,5 +29,10 @@ export const formatDateTime = (isoString) => {
 };
 
 export const getStatusClass = (status) => {
-  return status === 'Hợp lệ' ? 'valid' : 'invalid';
+  switch (status) {
+    case 'Present': return 'valid';
+    case 'Late': return 'warning';
+    case 'Absent': return 'invalid';
+    default: return '';
+  }
 };
