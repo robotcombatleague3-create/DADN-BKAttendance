@@ -7,7 +7,7 @@
   --bg-gradient: linear-gradient(135deg, #1e1e2f 0%, #2a2a40 100%);
   --glass-bg: rgba(255, 255, 255, 0.05);
   --glass-border: rgba(255, 255, 255, 0.1);
-  --text-main: #F3F4F6;
+  --text-main: #000000;
   --text-muted: #9CA3AF;
   --sidebar-w: 260px;
 }

@@ -57,6 +57,8 @@ npm start
 - [x] **Hệ thống Phân quyền:** Tách biệt hoàn toàn luồng nghiệp vụ cho Admin và Giảng viên.
 - [x] **Tìm kiếm & Lọc:** Hỗ trợ lọc danh sách sinh viên, giảng viên và lớp học trực tiếp trên Browser.
 - [x] **Biểu đồ thống kê:** Trực quan hóa dữ liệu điểm danh bằng Recharts.
+- [x] **Xuất báo cáo CSV:** Hỗ trợ xuất dữ liệu điểm danh chi tiết và thống kê lớp học ra file CSV trực tiếp từ Frontend bằng Blob API (hỗ trợ tiếng Việt UTF-8).
+- [x] **Quản lý Giảng viên & Sinh viên:** Liên kết dữ liệu thực qua API, hỗ trợ xem lịch sử điểm danh của từng sinh viên và chỉnh sửa hồ sơ giảng viên.
 
 ## Cấu hình MQTT (kiểm thử)
 Hệ thống kết nối tới Broker công cộng để nhận dữ liệu từ ESP32:

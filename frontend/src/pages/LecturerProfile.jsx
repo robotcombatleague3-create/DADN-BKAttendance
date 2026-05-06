@@ -1,57 +1,171 @@
-import React from 'react';
-import { User, Pencil } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { User, Pencil, X } from 'lucide-react';
+import { getLecturerProfile, getLecturerHistory, updateLecturerProfile } from '../services/api';
 import './LecturerProfile.css';
 
-const DUMMY_HISTORY = [
-  { id: 1, date: '10/5/2026', subject: 'Nguyên lý ngôn ngữ lập trình', room: 'H6-301', time: '12:55:32' },
-  { id: 2, date: '3/5/2026', subject: 'Nguyên lý ngôn ngữ lập trình', room: 'H6-301', time: '12:56:10' },
-  { id: 3, date: '26/4/2026', subject: 'Cấu trúc dữ liệu và giải thuật', room: 'H1-402', time: '07:15:00' },
-  { id: 4, date: '19/4/2026', subject: 'Cấu trúc dữ liệu và giải thuật', room: 'H1-402', time: '07:12:45' },
-  { id: 5, date: '9/4/2026', subject: 'Nguyên lý ngôn ngữ lập trình', room: 'H6-301', time: '13:00:00' },
-  { id: 6, date: '2/4/2026', subject: 'Nguyên lý ngôn ngữ lập trình', room: 'H6-301', time: '12:58:22' },
-];
+const USER_ID = 2; // Hardcode for demo purposes, replace with actual auth context later
 
 export default function LecturerProfile() {
+  const [profile, setProfile] = useState(null);
+  const [history, setHistory] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [editForm, setEditForm] = useState({ name: '', department: '', specialization: '' });
+  const [saving, setSaving] = useState(false);
+
+  const fetchProfileData = async () => {
+    try {
+      setLoading(true);
+      const [profileData, historyData] = await Promise.all([
+        getLecturerProfile(USER_ID),
+        getLecturerHistory(USER_ID)
+      ]);
+      setProfile(profileData);
+      setHistory(historyData);
+    } catch (err) {
+      console.error("Lỗi khi tải dữ liệu hồ sơ:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProfileData();
+  }, []);
+
+  const handleEditClick = () => {
+    if (profile) {
+      setEditForm({
+        name: profile.name || '',
+        department: profile.department || '',
+        specialization: profile.specialization || ''
+      });
+    }
+    setShowModal(true);
+  };
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      await updateLecturerProfile(USER_ID, editForm);
+      alert('Cập nhật hồ sơ thành công!');
+      setShowModal(false);
+      fetchProfileData(); // Reload data
+    } catch (error) {
+      console.error("Lỗi cập nhật hồ sơ:", error);
+      alert('Có lỗi xảy ra khi cập nhật hồ sơ!');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="profile-page-container d-flex justify-content-center align-items-center">
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Đang tải...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div className="profile-page-container d-flex justify-content-center align-items-center text-muted">
+        Không tìm thấy thông tin hồ sơ.
+      </div>
+    );
+  }
+
   return (
     <div className="profile-page-container">
       <div className="profile-card">
         {/* CỘT TRÁI (Thông tin cá nhân) */}
-        <div className="profile-left-col">
+        <div className="profile-left-col position-relative">
+          <button className="btn btn-sm btn-outline-light position-absolute top-0 end-0 m-3" onClick={handleEditClick} title="Chỉnh sửa thông tin">
+            <Pencil size={16} /> Edit
+          </button>
           <div className="profile-avatar">
             <User size={72} strokeWidth={1.5} />
           </div>
-          <div className="profile-name">Trần Thị A</div>
-          <div className="profile-id">MT071016</div>
-          <div className="profile-sub-id">Mã: MT071016XYZ</div>
+          <div className="profile-name">{profile.name}</div>
+          <div className="profile-id">{profile.department || 'Chưa cập nhật khoa'}</div>
+          <div className="profile-sub-id">{profile.specialization || 'Chưa cập nhật chuyên ngành'}</div>
+          {profile.rfid_uid && (
+            <div className="mt-3 text-success small">RFID: {profile.rfid_uid}</div>
+          )}
         </div>
 
         {/* CỘT PHẢI (Lịch sử điểm danh) */}
         <div className="profile-right-col">
-          <h2 className="profile-header-title">Lịch sử điểm danh</h2>
+          <h2 className="profile-header-title">Lịch sử giảng dạy</h2>
           
           <div className="profile-history-list">
-            {DUMMY_HISTORY.map((item) => (
-              <div key={item.id} className="profile-history-row">
-                <div className="profile-history-date">{item.date}</div>
-                
-                <div className="profile-history-detail-group">
-                  <div className="profile-history-text">
-                    {item.subject} | L03 | {item.room} | {item.time}
+            {history.length === 0 ? (
+              <div className="text-muted text-center p-4">Không có dữ liệu lịch sử.</div>
+            ) : (
+              history.map((item) => (
+                <div key={item.session_id} className="profile-history-row">
+                  <div className="profile-history-date">
+                    {new Date(item.session_date).toLocaleDateString('vi-VN')}
                   </div>
-                  <Pencil size={18} className="profile-icon" title="Chỉnh sửa" />
+                  
+                  <div className="profile-history-detail-group">
+                    <div className="profile-history-text">
+                      <strong>{item.class_name}</strong> | {item.room} | {item.start_time} - {item.end_time}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Phân trang nằm góc dưới cùng bên phải */}
-          <div className="profile-pagination">
-            <div className="profile-page-item active">1</div>
-            <div className="profile-page-item inactive">2</div>
-            <div className="profile-page-item inactive">3</div>
+              ))
+            )}
           </div>
         </div>
       </div>
+
+      {/* Edit Profile Modal */}
+      {showModal && (
+        <div className="modal-overlay d-flex justify-content-center align-items-center" style={{backgroundColor: 'rgba(0,0,0,0.5)', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1050}}>
+          <div className="modal-content p-4 rounded bg-white shadow" style={{width: '400px', maxWidth: '90%'}}>
+            <div className="d-flex justify-content-between align-items-center mb-3">
+              <h5 className="mb-0 text-dark">Chỉnh sửa hồ sơ</h5>
+              <button className="btn btn-link text-dark p-0" onClick={() => setShowModal(false)}><X size={20}/></button>
+            </div>
+            <div className="mb-3">
+              <label className="form-label text-dark">Họ tên</label>
+              <input 
+                type="text" 
+                className="form-control" 
+                value={editForm.name} 
+                onChange={(e) => setEditForm({...editForm, name: e.target.value})}
+              />
+            </div>
+            <div className="mb-3">
+              <label className="form-label text-dark">Khoa/Bộ môn</label>
+              <input 
+                type="text" 
+                className="form-control" 
+                value={editForm.department} 
+                onChange={(e) => setEditForm({...editForm, department: e.target.value})}
+              />
+            </div>
+            <div className="mb-3">
+              <label className="form-label text-dark">Chuyên ngành</label>
+              <input 
+                type="text" 
+                className="form-control" 
+                value={editForm.specialization} 
+                onChange={(e) => setEditForm({...editForm, specialization: e.target.value})}
+              />
+            </div>
+            <div className="d-flex justify-content-end gap-2 mt-4">
+              <button className="btn btn-secondary" onClick={() => setShowModal(false)}>Hủy</button>
+              <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
+                {saving ? 'Đang lưu...' : 'Lưu thay đổi'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

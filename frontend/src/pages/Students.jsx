@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, User, Pencil, Trash2, MoreHorizontal, X, ArrowLeft } from 'lucide-react';
-import { getStudents, getStatusClass } from '../services/api';
+import { getStudents, getStatusClass, getStudentAttendanceHistory, formatDateTime } from '../services/api';
 import './Students.css';
 
 export default function Students() {
@@ -9,6 +9,8 @@ export default function Students() {
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [studentHistory, setStudentHistory] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
 
   useEffect(() => {
     const loadStudents = async () => {
@@ -24,8 +26,17 @@ export default function Students() {
     loadStudents();
   }, []);
 
-  const handleRowClick = (student) => {
+  const handleRowClick = async (student) => {
     setSelectedStudent(student);
+    setHistoryLoading(true);
+    try {
+      const data = await getStudentAttendanceHistory(student.id);
+      setStudentHistory(data);
+    } catch (err) {
+      console.error("Lỗi tải lịch sử sinh viên:", err);
+    } finally {
+      setHistoryLoading(false);
+    }
   };
 
   const handleBack = () => {
@@ -66,13 +77,48 @@ export default function Students() {
 
             <div className="detail-main">
               <div className="detail-header">
-                <h2 className="detail-title">Thông tin chi tiết</h2>
+                <h2 className="detail-title">Lịch sử điểm danh</h2>
                 <button className="btn-delete" onClick={() => setShowDeleteModal(true)} title="Xóa sinh viên">
                   <X size={20} />
                 </button>
               </div>
-              <div style={{ padding: '20px', color: '#ccc' }}>
-                <p>Tính năng xem lịch sử riêng từng sinh viên đang được phát triển...</p>
+              <div style={{ padding: '20px' }}>
+                {historyLoading ? (
+                  <div className="text-center">
+                    <div className="spinner-border text-primary" role="status">
+                      <span className="visually-hidden">Đang tải...</span>
+                    </div>
+                  </div>
+                ) : studentHistory.length === 0 ? (
+                  <div className="text-center text-muted">Sinh viên này chưa có lịch sử điểm danh.</div>
+                ) : (
+                  <div className="table-responsive">
+                    <table className="table table-hover align-middle">
+                      <thead className="table-light">
+                        <tr>
+                          <th>Ngày</th>
+                          <th>Môn học</th>
+                          <th>Giờ quét</th>
+                          <th>Trạng thái</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {studentHistory.map((log, index) => (
+                          <tr key={index}>
+                            <td>{new Date(log.session_date).toLocaleDateString('vi-VN')}</td>
+                            <td>{log.class_name} <br/><small className="text-muted">{log.room}</small></td>
+                            <td>{log.checkin_time ? new Date(log.checkin_time).toLocaleTimeString('vi-VN') : '-'}</td>
+                            <td>
+                              <span className={`badge ${log.status === 'Present' ? 'bg-success' : log.status === 'Late' ? 'bg-warning' : 'bg-danger'}`}>
+                                {log.status === 'Present' ? 'Có mặt' : log.status === 'Late' ? 'Đi trễ' : 'Vắng mặt'}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             </div>
           </div>

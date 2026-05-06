@@ -36,3 +36,35 @@ export const getStatusClass = (status) => {
     default: return '';
   }
 };
+
+export const getStudentAttendanceHistory = async (studentId, classId = '') => {
+  const url = classId 
+    ? `${API_URL}/attendance/student/${studentId}?classId=${classId}` 
+    : `${API_URL}/attendance/student/${studentId}`;
+  const res = await fetch(url);
+  const data = await res.json();
+  return data.data || [];
+};
+
+export const getLecturerProfile = async (userId) => {
+  const res = await fetch(`${API_URL}/lecturers/profile/${userId}`);
+  const data = await res.json();
+  return data.data || null;
+};
+
+export const updateLecturerProfile = async (userId, profileData) => {
+  const res = await fetch(`${API_URL}/lecturers/profile/${userId}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(profileData)
+  });
+  return res.json();
+};
+
+export const getLecturerHistory = async (userId) => {
+  const res = await fetch(`${API_URL}/lecturers/history/${userId}`);
+  const data = await res.json();
+  return data.data || [];
+};

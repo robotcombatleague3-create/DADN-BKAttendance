@@ -1,9 +1,103 @@
 const db = require('../config/db');
 
-// Lấy danh sách lịch sử điểm danh (JOIN nhiều bảng)
+// ==================== STRATEGY PATTERN FOR ATTENDANCE STATUS ====================
+// Interface/Base Strategy
+class StatusStrategy {
+  evaluate(checkinTimeStr, startTimeStr, lateThresholdStr) {
+    throw new Error('Method evaluate() must be implemented.');
+  }
+}
+
+class PresentStrategy extends StatusStrategy {
+  evaluate(checkinTimeStr, startTimeStr, lateThresholdStr) {
+    if (checkinTimeStr <= startTimeStr) return 'Present';
+    return null;
+  }
+}
+
+class LateStrategy extends StatusStrategy {
+  evaluate(checkinTimeStr, startTimeStr, lateThresholdStr) {
+    if (checkinTimeStr > startTimeStr && checkinTimeStr <= lateThresholdStr) return 'Late';
+    return null;
+  }
+}
+
+class AbsentStrategy extends StatusStrategy {
+  evaluate(checkinTimeStr, startTimeStr, lateThresholdStr) {
+    // Nếu trễ hơn thời gian cho phép đi trễ thì đánh Vắng
+    if (checkinTimeStr > lateThresholdStr) return 'Absent';
+    return null;
+  }
+}
+
+class AttendanceContext {
+  constructor() {
+    this.strategies = [
+      new PresentStrategy(),
+      new LateStrategy(),
+      new AbsentStrategy()
+    ];
+  }
+
+  determineStatus(checkinTimeStr, startTimeStr, lateThresholdStr) {
+    for (const strategy of this.strategies) {
+      const status = strategy.evaluate(checkinTimeStr, startTimeStr, lateThresholdStr);
+      if (status) return status;
+    }
+    return 'Absent'; // Default fallback
+  }
+}
+
+const attendanceContext = new AttendanceContext();
+// ===============================================================================
+
+// 1. Lấy danh sách lớp của giảng viên
+exports.getClasses = async (req, res) => {
+  try {
+    const { lecturerId } = req.query;
+    if (!lecturerId) {
+      return res.status(400).json({ success: false, message: 'Thiếu lecturerId' });
+    }
+
+    const query = `
+      SELECT 
+        c.class_id,
+        c.class_name
+      FROM classes c
+      WHERE c.lecturer_id = ?
+    `;
+    
+    const [rows] = await db.execute(query, [lecturerId]);
+    
+    // Parse class_name "Nguyên lý ngôn ngữ lập trình L01 | H6-301" -> Name: "Nguyên lý ngôn ngữ lập trình L01", Room: "H6-301"
+    const parsedData = rows.map(row => {
+      let className = row.class_name;
+      let room = 'Chưa xác định';
+      if (row.class_name.includes('|')) {
+        const parts = row.class_name.split('|');
+        className = parts[0].trim();
+        room = parts[1].trim();
+      }
+      return {
+        class_id: row.class_id,
+        class_code: row.class_id.toString(), // Mã lớp (có thể dùng string ID)
+        class_name: className,
+        room: room
+      };
+    });
+
+    res.json({ success: true, data: parsedData });
+  } catch (error) {
+    console.error('Database error in getClasses:', error);
+    res.status(500).json({ success: false, message: 'Lỗi máy chủ khi lấy danh sách lớp' });
+  }
+};
+
+// 2. Tra cứu lịch sử điểm danh (hỗ trợ filter classId, date)
 exports.getHistory = async (req, res) => {
   try {
-    const query = `
+    const { classId, date } = req.query;
+    let query = `
       SELECT 
         al.session_id,
         al.student_id,
@@ -16,9 +110,24 @@ exports.getHistory = async (req, res) => {
       JOIN students s ON al.student_id = s.student_id
       JOIN sessions ss ON al.session_id = ss.session_id
       JOIN classes c ON ss.class_id = c.class_id
-      ORDER BY al.checkin_time DESC
+      WHERE 1=1
     `;
-    const [rows] = await db.execute(query);
+    
+    const queryParams = [];
+
+    if (classId) {
+      query += ' AND c.class_id = ?';
+      queryParams.push(classId);
+    }
+    
+    if (date) {
+      query += ' AND ss.session_date = ?';
+      queryParams.push(date);
+    }
+
+    query += ' ORDER BY al.checkin_time DESC';
+
+    const [rows] = await db.execute(query, queryParams);
     res.json({ success: true, data: rows });
   } catch (error) {
     console.error('Database error in getHistory:', error);
@@ -26,7 +135,70 @@ exports.getHistory = async (req, res) => {
   }
 };
 
-// API nhận dữ liệu từ ESP32 hoặc Trang Test khi quét thẻ
+// 3. Lấy thống kê cơ bản cho biểu đồ
+exports.getClassStats = async (req, res) => {
+  try {
+    const { classId } = req.params;
+    if (!classId) {
+      return res.status(400).json({ success: false, message: 'Thiếu classId' });
+    }
+
+    // Đếm tổng số sinh viên trong lớp
+    const [totalStudentsRows] = await db.execute(`
+      SELECT COUNT(student_id) as total_students 
+      FROM class_students 
+      WHERE class_id = ?
+    `, [classId]);
+    const totalStudents = totalStudentsRows[0].total_students || 0;
+
+    // Tìm buổi học gần nhất của lớp này
+    const [sessionRows] = await db.execute(`
+      SELECT session_id 
+      FROM sessions 
+      WHERE class_id = ? 
+      ORDER BY session_date DESC, start_time DESC 
+      LIMIT 1
+    `, [classId]);
+
+    let present = 0, late = 0, absent = totalStudents;
+
+    if (sessionRows.length > 0) {
+      const sessionId = sessionRows[0].session_id;
+
+      // Đếm trạng thái từ bảng attendance_logs
+      const [statsRows] = await db.execute(`
+        SELECT status, COUNT(*) as count 
+        FROM attendance_logs 
+        WHERE session_id = ? 
+        GROUP BY status
+      `, [sessionId]);
+
+      statsRows.forEach(row => {
+        if (row.status === 'Present') present = row.count;
+        if (row.status === 'Late') late = row.count;
+      });
+      // Số người vắng là tổng số SV trừ đi những người đã có log (Present hoặc Late) 
+      absent = totalStudents - present - late;
+      if (absent < 0) absent = 0;
+    }
+
+    res.json({
+      success: true,
+      data: {
+        total_students: totalStudents,
+        present: present,
+        late: late,
+        absent: absent
+      }
+    });
+
+  } catch (error) {
+    console.error('Database error in getClassStats:', error);
+    res.status(500).json({ success: false, message: 'Lỗi máy chủ khi lấy thống kê' });
+  }
+};
+
+// 4. API nhận dữ liệu từ ESP32 hoặc Trang Test khi quét thẻ
 exports.scanCard = async (req, res) => {
   const { rfid_uid } = req.body;
 
@@ -35,7 +207,7 @@ exports.scanCard = async (req, res) => {
   }
 
   try {
-    // 1. Dùng câu lệnh SQL (SELECT) query vào bảng rfid_cards JOIN với bảng students
+    // 1. Tìm sinh viên qua RFID
     const [studentRows] = await db.execute(`
       SELECT s.student_id, s.student_code, s.name as student_name
       FROM rfid_cards rc
@@ -43,7 +215,6 @@ exports.scanCard = async (req, res) => {
       WHERE rc.rfid_uid = ?
     `, [rfid_uid]);
 
-    // 2. Nếu KHÔNG tìm thấy thẻ: Trả về HTTP 404
     if (studentRows.length === 0) {
       return res.status(404).json({ 
         success: false, 
@@ -53,9 +224,9 @@ exports.scanCard = async (req, res) => {
 
     const student = studentRows[0];
 
-    // 3. Tìm session đang hoạt động (Bắt buộc để INSERT vào attendance_logs)
+    // 2. Tìm session đang hoạt động
     const [sessionRows] = await db.execute(`
-      SELECT session_id, late_threshold 
+      SELECT session_id, start_time, late_threshold 
       FROM sessions 
       WHERE session_date = CURDATE() 
       AND CURTIME() BETWEEN start_time AND end_time
@@ -69,19 +240,21 @@ exports.scanCard = async (req, res) => {
       });
     }
 
-    const { session_id, late_threshold } = sessionRows[0];
+    const { session_id, start_time, late_threshold } = sessionRows[0];
     const currentTime = new Date();
     const timeString = currentTime.toTimeString().split(' ')[0]; // HH:MM:SS
-    const status = timeString <= late_threshold ? 'Present' : 'Late';
+    
+    // 3. Sử dụng Strategy Pattern để xác định status
+    const status = attendanceContext.determineStatus(timeString, start_time, late_threshold);
 
-    // 4. Thực hiện INSERT vào bảng attendance_logs (Sử dụng ON DUPLICATE KEY UPDATE để tránh lỗi nếu quét 2 lần)
+    // 4. Thực hiện INSERT/UPDATE vào bảng attendance_logs
     await db.execute(`
       INSERT INTO attendance_logs (session_id, student_id, checkin_time, status)
       VALUES (?, ?, NOW(), ?)
       ON DUPLICATE KEY UPDATE checkin_time = NOW(), status = VALUES(status)
     `, [session_id, student.student_id, status]);
 
-    // 5. Trả về HTTP 200 với JSON chứa thông tin sinh viên
+    // 5. Trả về HTTP 200 với JSON
     const responseData = {
       success: true,
       data: {
@@ -91,12 +264,12 @@ exports.scanCard = async (req, res) => {
       }
     };
 
-    // Phát event cho Frontend (Real-time dashboard)
+    // Phát event cho Frontend
     const io = req.io;
     if (io) {
       io.emit('new_attendance', {
         ...responseData.data,
-        class_name: 'Đang cập nhật...', // Có thể lấy thêm class_name nếu cần
+        class_name: 'Đang cập nhật...', 
         status: status
       });
     }
@@ -106,5 +279,71 @@ exports.scanCard = async (req, res) => {
   } catch (error) {
     console.error('Database error in scanCard:', error);
     res.status(500).json({ success: false, message: 'Lỗi hệ thống khi xử lý thẻ' });
+  }
+};
+
+// 5. Lấy lịch sử điểm danh của 1 Sinh viên cụ thể
+exports.getStudentAttendanceHistory = async (req, res) => {
+  try {
+    const { studentId } = req.params;
+    const { classId } = req.query;
+
+    if (!studentId) {
+      return res.status(400).json({ success: false, message: 'Thiếu studentId' });
+    }
+
+    let query = `
+      SELECT 
+        al.session_id,
+        c.class_name,
+        c.class_id,
+        ss.session_date,
+        ss.start_time,
+        ss.end_time,
+        al.checkin_time,
+        al.status
+      FROM attendance_logs al
+      JOIN sessions ss ON al.session_id = ss.session_id
+      JOIN classes c ON ss.class_id = c.class_id
+      WHERE al.student_id = ?
+    `;
+
+    const queryParams = [studentId];
+
+    if (classId) {
+      query += ' AND c.class_id = ?';
+      queryParams.push(classId);
+    }
+
+    query += ' ORDER BY ss.session_date DESC, ss.start_time DESC';
+
+    const [rows] = await db.execute(query, queryParams);
+    
+    // Parse class_name "Nguyên lý ngôn ngữ lập trình L01 | H6-301" -> Name: "Nguyên lý ngôn ngữ lập trình L01", Room: "H6-301"
+    const parsedData = rows.map(row => {
+      let className = row.class_name;
+      let room = 'Chưa xác định';
+      if (row.class_name && row.class_name.includes('|')) {
+        const parts = row.class_name.split('|');
+        className = parts[0].trim();
+        room = parts[1].trim();
+      }
+      return {
+        session_id: row.session_id,
+        class_id: row.class_id,
+        class_name: className,
+        room: room,
+        session_date: row.session_date,
+        start_time: row.start_time,
+        end_time: row.end_time,
+        checkin_time: row.checkin_time,
+        status: row.status
+      };
+    });
+
+    res.json({ success: true, data: parsedData });
+  } catch (error) {
+    console.error('Database error in getStudentAttendanceHistory:', error);
+    res.status(500).json({ success: false, message: 'Lỗi máy chủ khi lấy dữ liệu' });
   }
 };
