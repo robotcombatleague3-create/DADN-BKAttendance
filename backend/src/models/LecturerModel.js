@@ -5,7 +5,7 @@ class LecturerModel {
     const query = `
       SELECT 
         l.lecturer_id as id,
-        u.full_name as name,
+        u.name,
         u.email,
         l.department as khoa,
         l.specialization as major,

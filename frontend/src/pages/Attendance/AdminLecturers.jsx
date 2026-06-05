@@ -72,8 +72,8 @@ export default function AdminLecturers() {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <button className="btn bg-white border border-dark fw-medium d-flex align-items-center gap-2">
-              <UserPlus size={18} /> Thêm
+            <button className="btn btn-primary fw-medium d-flex align-items-center gap-2 text-white">
+              <User size={18} /> Thêm giảng viên
             </button>
           </div>
 
@@ -101,11 +101,11 @@ export default function AdminLecturers() {
                       </div>
                     </div>
                     <div className="d-flex gap-2">
-                      <button className="btn btn-light btn-sm rounded" onClick={(e) => openEditModal(lecturer, e)} title="Chỉnh sửa">
-                        <Pencil size={18} className="text-secondary" />
+                      <button className="btn btn-outline-primary btn-sm rounded" onClick={(e) => openEditModal(lecturer, e)} title="Chỉnh sửa">
+                        <Pencil size={18} />
                       </button>
-                      <button className="btn btn-light btn-sm rounded" onClick={(e) => { e.stopPropagation(); }} title="Xóa">
-                        <Trash2 size={18} className="text-danger" />
+                      <button className="btn btn-outline-danger btn-sm rounded" onClick={(e) => { e.stopPropagation(); }} title="Xóa">
+                        <Trash2 size={18} />
                       </button>
                     </div>
                   </div>
@@ -117,7 +117,7 @@ export default function AdminLecturers() {
       ) : (
         /* TRẠNG THÁI 2: CHI TIẾT & LỊCH SỬ */
         <div className="h-100 d-flex flex-column">
-          <button className="btn btn-link text-decoration-none d-flex align-items-center gap-2 p-0 mb-3 text-primary fw-medium align-self-start" onClick={() => setSelectedLecturer(null)}>
+          <button className="btn btn-secondary d-flex align-items-center gap-2 mb-3 text-white fw-medium align-self-start" onClick={() => setSelectedLecturer(null)}>
             <ChevronLeft size={20} /> Quay lại
           </button>
           
@@ -140,7 +140,7 @@ export default function AdminLecturers() {
                 <div className="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
                   <h4 className="fw-bold m-0 text-dark">Lịch sử điểm danh</h4>
                   <div className="d-flex gap-2">
-                    <button className="btn btn-outline-secondary d-flex align-items-center gap-2" onClick={() => openEditModal(selectedLecturer)}>
+                    <button className="btn btn-primary d-flex align-items-center gap-2 text-white" onClick={() => openEditModal(selectedLecturer)}>
                       <Pencil size={18} /> Chỉnh sửa
                     </button>
                     <button className="btn btn-danger d-flex align-items-center gap-2">
@@ -156,12 +156,12 @@ export default function AdminLecturers() {
                 {/* Phân trang */}
                 <div className="d-flex justify-content-end mt-4">
                   <nav>
-                    <ul className="pagination mb-0">
-                      <li className="page-item disabled"><a className="page-link" href="#">Trang trước</a></li>
-                      <li className="page-item active"><a className="page-link" href="#">1</a></li>
-                      <li className="page-item"><a className="page-link" href="#">2</a></li>
-                      <li className="page-item"><a className="page-link" href="#">3</a></li>
-                      <li className="page-item"><a className="page-link" href="#">Trang sau</a></li>
+                    <ul className="pagination mb-0 gap-2 border-0">
+                      <li className="page-item disabled me-3"><a className="page-link rounded border-0" href="#">Trang trước</a></li>
+                      <li className="page-item active"><a className="page-link rounded border-0" href="#">1</a></li>
+                      <li className="page-item"><a className="page-link rounded border-0" href="#">2</a></li>
+                      <li className="page-item"><a className="page-link rounded border-0" href="#">3</a></li>
+                      <li className="page-item ms-3"><a className="page-link rounded border-0" href="#">Trang sau</a></li>
                     </ul>
                   </nav>
                 </div>

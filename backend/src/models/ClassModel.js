@@ -6,7 +6,7 @@ class ClassModel {
       SELECT 
         c.class_id as id,
         c.class_name as name,
-        u.full_name as lecturer,
+        u.name as lecturer,
         (SELECT COUNT(*) FROM class_students cs WHERE cs.class_id = c.class_id) as students
       FROM classes c
       JOIN lecturers l ON c.lecturer_id = l.lecturer_id
