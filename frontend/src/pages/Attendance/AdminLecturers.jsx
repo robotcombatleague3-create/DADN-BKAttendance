@@ -1,16 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, User, Pencil, Trash2, X, ChevronLeft, ScanLine, UserPlus } from 'lucide-react';
-
-const DUMMY_LECTURERS = [
-  { id: 1, name: 'Lê Thị A', mssv: 'MT071016', rfid: 'A1B2C3D4', classes: ['Giải tích 2 | L01 | H1-201 | 10:05:22', 'Ngoại ngữ | L02 | H2-302 | 07:15:00'] },
-  { id: 2, name: 'Phan T', mssv: 'MT071017', rfid: '', classes: ['Nguyên lý ngôn ngữ lập trình | L03 | H6-301 | 12:55:32'] },
-  { id: 3, name: 'Đỗ Văn A', mssv: 'MT071018', rfid: 'B5C6D7E8', classes: ['Cấu trúc dữ liệu và giải thuật | L04 | H6-101 | 09:12:45'] },
-  { id: 4, name: 'Nguyễn Văn B', mssv: 'MT071019', rfid: '', classes: ['Kiến trúc máy tính | L05 | H3-401 | 14:02:11'] },
-  { id: 5, name: 'Lê Hoàng C', mssv: 'MT071020', rfid: 'F1A2B3C4', classes: ['Mạng máy tính | L06 | H2-101 | 08:30:00'] },
-];
+import { getLecturers } from '../../services/api';
 
 export default function AdminLecturers() {
+  const [lecturers, setLecturers] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [selectedLecturer, setSelectedLecturer] = useState(null);
+  
+  useEffect(() => {
+    const loadLecturers = async () => {
+      try {
+        const data = await getLecturers();
+        setLecturers(data);
+      } catch (err) {
+        console.error("Lỗi tải danh sách giảng viên:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadLecturers();
+  }, []);
   
   // Edit Modal State
   const [showEditModal, setShowEditModal] = useState(false);
@@ -21,7 +30,7 @@ export default function AdminLecturers() {
   const openEditModal = (lecturer, e) => {
     if (e) e.stopPropagation();
     setEditingLecturer(lecturer);
-    setRfidValue(lecturer.rfid || '');
+    setRfidValue(lecturer.rfid_uid || '');
     setShowEditModal(true);
   };
 
@@ -41,9 +50,9 @@ export default function AdminLecturers() {
 
   const [searchTerm, setSearchTerm] = useState('');
 
-  const filteredLecturers = DUMMY_LECTURERS?.filter(lecturer => 
-    lecturer.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    lecturer.mssv.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredLecturers = lecturers?.filter(lecturer => 
+    lecturer.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    (lecturer.khoa && lecturer.khoa.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   return (
@@ -70,8 +79,10 @@ export default function AdminLecturers() {
 
           <div className="card border-0 shadow-sm flex-grow-1 mb-3">
             <div className="list-group list-group-flush rounded-3" style={{ maxHeight: '65vh', overflowY: 'auto' }}>
-              {!filteredLecturers || filteredLecturers.length === 0 ? (
-                 <div className="text-center p-5 text-secondary">Đang tải / Không có dữ liệu.</div>
+              {loading ? (
+                 <div className="text-center p-5 text-secondary">Đang tải dữ liệu từ server...</div>
+              ) : !filteredLecturers || filteredLecturers.length === 0 ? (
+                 <div className="text-center p-5 text-secondary">Không có dữ liệu.</div>
               ) : (
                 filteredLecturers?.map(lecturer => (
                   <div 
@@ -86,7 +97,7 @@ export default function AdminLecturers() {
                       </div>
                       <div>
                         <h6 className="mb-1 text-dark fw-bold">{lecturer.name}</h6>
-                        <span className="text-secondary small d-block">Mã số: {lecturer.mssv} {lecturer.rfid ? `| Mã: ${lecturer.rfid}XYZ` : '| Chưa gán thẻ'}</span>
+                        <span className="text-secondary small d-block">Khoa: {lecturer.khoa || 'Chưa cập nhật'} {lecturer.rfid_uid ? `| Mã thẻ: ${lecturer.rfid_uid}` : '| Chưa gán thẻ'}</span>
                       </div>
                     </div>
                     <div className="d-flex gap-2">
@@ -118,8 +129,8 @@ export default function AdminLecturers() {
                   <User size={40} />
                 </div>
                 <h5 className="fw-bold mb-2">{selectedLecturer.name}</h5>
-                <p className="text-secondary mb-1">Mã số: {selectedLecturer.mssv}</p>
-                <p className="text-secondary small">Mã thẻ: {selectedLecturer.rfid || 'Chưa định danh'}</p>
+                <p className="text-secondary mb-1">Khoa: {selectedLecturer.khoa}</p>
+                <p className="text-secondary small">Mã thẻ: {selectedLecturer.rfid_uid || 'Chưa định danh'}</p>
               </div>
             </div>
 
@@ -139,22 +150,7 @@ export default function AdminLecturers() {
                 </div>
                 
                 <div className="list-group list-group-flush flex-grow-1">
-                  {selectedLecturer.classes.map((cls, idx) => (
-                    <div key={idx} className="list-group-item d-flex justify-content-between align-items-center py-3 px-0">
-                      <div>
-                        <span className="fw-semibold d-block text-dark">{cls}</span>
-                        <span className="small text-secondary">Đã điểm danh sinh viên thành công</span>
-                      </div>
-                      <div className="d-flex align-items-center gap-3">
-                        <button className="btn btn-light btn-sm rounded" title="Chỉnh sửa buổi học">
-                          <Pencil size={16} className="text-secondary" />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                  {selectedLecturer.classes.length === 0 && (
-                     <div className="text-center text-secondary py-5">Giảng viên chưa giảng dạy môn nào.</div>
-                  )}
+                  <div className="text-center text-secondary py-5">Chức năng quản lý lớp của giảng viên đang được phát triển...</div>
                 </div>
 
                 {/* Phân trang */}
@@ -190,8 +186,8 @@ export default function AdminLecturers() {
                   <input type="text" className="form-control" defaultValue={editingLecturer?.name} />
                 </div>
                 <div className="mb-3">
-                  <label className="form-label fw-medium">Mã số giảng viên</label>
-                  <input type="text" className="form-control" defaultValue={editingLecturer?.mssv} />
+                  <label className="form-label fw-medium">Khoa / Phòng ban</label>
+                  <input type="text" className="form-control" defaultValue={editingLecturer?.khoa} />
                 </div>
                 <div className="mb-4">
                   <label className="form-label fw-medium text-primary">Mã thẻ RFID</label>

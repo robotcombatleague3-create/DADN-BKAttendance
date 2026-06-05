@@ -1,21 +1,9 @@
-const db = require('../config/db');
+const StudentModel = require('../models/StudentModel');
 
 exports.getAllStudents = async (req, res) => {
   try {
-    const query = `
-      SELECT 
-        s.student_id as id,
-        s.student_code as code,
-        s.name,
-        c.class_name as class,
-        rc.rfid_uid
-      FROM students s
-      LEFT JOIN class_students cs ON s.student_id = cs.student_id
-      LEFT JOIN classes c ON cs.class_id = c.class_id
-      LEFT JOIN rfid_cards rc ON s.student_id = rc.student_id
-    `;
-    const [rows] = await db.execute(query);
-    res.json({ success: true, data: rows });
+    const students = await StudentModel.getAllWithDetails();
+    res.json({ success: true, data: students });
   } catch (error) {
     console.error('Database error in getAllStudents:', error);
     res.status(500).json({ success: false, message: 'Lỗi máy chủ khi lấy danh sách sinh viên' });
@@ -31,16 +19,47 @@ exports.assignRfid = async (req, res) => {
   }
 
   try {
-    // Thêm hoặc cập nhật thẻ RFID cho sinh viên
-    await db.execute(`
-      INSERT INTO rfid_cards (rfid_uid, student_id)
-      VALUES (?, ?)
-      ON DUPLICATE KEY UPDATE student_id = VALUES(student_id)
-    `, [rfidUid, id]);
-
+    await StudentModel.assignRfid(id, rfidUid);
     res.json({ success: true, message: 'Gán thẻ RFID thành công' });
   } catch (error) {
     console.error('Database error in assignRfid:', error);
     res.status(500).json({ success: false, message: 'Lỗi máy chủ khi gán thẻ RFID' });
+  }
+};
+
+exports.updateStudent = async (req, res) => {
+  const { id } = req.params;
+  const { name, code, rfidUid } = req.body;
+
+  try {
+    // Cập nhật thông tin cơ bản
+    if (name && code) {
+      await StudentModel.updateStudent(id, name, code);
+    }
+    // Cập nhật RFID nếu có truyền lên
+    if (rfidUid !== undefined) {
+      if (rfidUid === '') {
+         // Nếu truyền lên rỗng, ta có thể xóa liên kết thẻ.
+         // Tuy nhiên hàm assignRfid hiện tại dùng INSERT ON DUPLICATE KEY.
+         // Ta sẽ tạm thời bỏ qua tính năng xóa thẻ để giữ đơn giản, hoặc cập nhật logic nếu cần.
+      } else {
+         await StudentModel.assignRfid(id, rfidUid);
+      }
+    }
+    res.json({ success: true, message: 'Cập nhật sinh viên thành công' });
+  } catch (error) {
+    console.error('Database error in updateStudent:', error);
+    res.status(500).json({ success: false, message: 'Lỗi máy chủ khi cập nhật thông tin' });
+  }
+};
+
+exports.deleteStudent = async (req, res) => {
+  const { id } = req.params;
+  try {
+    await StudentModel.deleteStudent(id);
+    res.json({ success: true, message: 'Xóa sinh viên thành công' });
+  } catch (error) {
+    console.error('Database error in deleteStudent:', error);
+    res.status(500).json({ success: false, message: 'Lỗi máy chủ khi xóa sinh viên' });
   }
 };

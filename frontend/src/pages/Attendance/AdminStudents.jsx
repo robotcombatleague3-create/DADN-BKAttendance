@@ -1,27 +1,40 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, User, Pencil, Trash2, X, ChevronLeft, ScanLine } from 'lucide-react';
-
-const DUMMY_STUDENTS = [
-  { id: 1, name: 'Nguyễn Văn A', mssv: '2112345', rfid: 'B5C6D7E8', classes: ['Giải tích 2', 'Ngoại ngữ'] },
-  { id: 2, name: 'Trần Thị B', mssv: '2112346', rfid: '', classes: ['Nguyên lý ngôn ngữ lập trình', 'Vật lý 1'] },
-  { id: 3, name: 'Lê Hoàng C', mssv: '2112347', rfid: 'F1A2B3C4', classes: ['Cấu trúc dữ liệu và giải thuật'] },
-  { id: 4, name: 'Phạm Văn D', mssv: '2112348', rfid: '', classes: ['Giải tích 2', 'Lập trình hướng đối tượng'] },
-  { id: 5, name: 'Hoàng Thị E', mssv: '2112349', rfid: 'A1B2C3D4', classes: ['Mạng máy tính'] },
-];
+import { getStudents, updateStudent, deleteStudent } from '../../services/api';
 
 export default function AdminStudents() {
+  const [students, setStudents] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [selectedStudent, setSelectedStudent] = useState(null);
   
+  useEffect(() => {
+    const loadStudents = async () => {
+      try {
+        const data = await getStudents();
+        setStudents(data);
+      } catch (err) {
+        console.error("Lỗi tải danh sách sinh viên:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadStudents();
+  }, []);
+
   // Edit Modal State
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
+  const [editName, setEditName] = useState("");
+  const [editCode, setEditCode] = useState("");
   const [rfidValue, setRfidValue] = useState("");
   const [isScanning, setIsScanning] = useState(false);
 
   const openEditModal = (student, e) => {
     if (e) e.stopPropagation();
     setEditingStudent(student);
-    setRfidValue(student.rfid || '');
+    setEditName(student.name || '');
+    setEditCode(student.code || '');
+    setRfidValue(student.rfid_uid || '');
     setShowEditModal(true);
   };
 
@@ -29,6 +42,43 @@ export default function AdminStudents() {
     setShowEditModal(false);
     setEditingStudent(null);
     setIsScanning(false);
+  };
+
+  const handleSave = async () => {
+    try {
+      await updateStudent(editingStudent.id, {
+        name: editName,
+        code: editCode,
+        rfidUid: rfidValue
+      });
+      // reload
+      const data = await getStudents();
+      setStudents(data);
+      
+      // Update selectedStudent view if it is the one being edited
+      if (selectedStudent && selectedStudent.id === editingStudent.id) {
+         setSelectedStudent({...selectedStudent, name: editName, code: editCode, rfid_uid: rfidValue});
+      }
+      closeEditModal();
+    } catch (err) {
+      console.error(err);
+      alert("Lỗi cập nhật sinh viên");
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Bạn có chắc chắn muốn xóa sinh viên này?")) return;
+    try {
+      await deleteStudent(id);
+      const data = await getStudents();
+      setStudents(data);
+      if (selectedStudent && selectedStudent.id === id) {
+        setSelectedStudent(null);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Lỗi xóa sinh viên");
+    }
   };
 
   const handleScanRfid = () => {
@@ -41,9 +91,9 @@ export default function AdminStudents() {
 
   const [searchTerm, setSearchTerm] = useState('');
 
-  const filteredStudents = DUMMY_STUDENTS?.filter(student => 
+  const filteredStudents = students?.filter(student => 
     student.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    student.mssv.toLowerCase().includes(searchTerm.toLowerCase())
+    (student.code && student.code.toString().toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   return (
@@ -70,8 +120,10 @@ export default function AdminStudents() {
 
           <div className="card border-0 shadow-sm flex-grow-1 mb-3">
             <div className="list-group list-group-flush rounded-3" style={{ maxHeight: '65vh', overflowY: 'auto' }}>
-              {!filteredStudents || filteredStudents.length === 0 ? (
-                 <div className="text-center p-5 text-secondary">Đang tải / Không có dữ liệu.</div>
+              {loading ? (
+                 <div className="text-center p-5 text-secondary">Đang tải dữ liệu từ server...</div>
+              ) : !filteredStudents || filteredStudents.length === 0 ? (
+                 <div className="text-center p-5 text-secondary">Không có dữ liệu.</div>
               ) : (
                 filteredStudents?.map(student => (
                   <div 
@@ -86,14 +138,14 @@ export default function AdminStudents() {
                       </div>
                       <div>
                         <h6 className="mb-1 text-dark fw-bold">{student.name}</h6>
-                        <span className="text-secondary small d-block">MSSV: {student.mssv} {student.rfid ? `| Thẻ: ${student.rfid}` : '| Chưa gán thẻ'}</span>
+                        <span className="text-secondary small d-block">MSSV: {student.code} {student.rfid_uid ? `| Thẻ: ${student.rfid_uid}` : '| Chưa gán thẻ'}</span>
                       </div>
                     </div>
                     <div className="d-flex gap-2">
                       <button className="btn btn-light btn-sm rounded" onClick={(e) => openEditModal(student, e)} title="Chỉnh sửa">
                         <Pencil size={18} className="text-secondary" />
                       </button>
-                      <button className="btn btn-light btn-sm rounded" onClick={(e) => { e.stopPropagation(); }} title="Xóa">
+                      <button className="btn btn-light btn-sm rounded" onClick={(e) => { e.stopPropagation(); handleDelete(student.id); }} title="Xóa">
                         <Trash2 size={18} className="text-danger" />
                       </button>
                     </div>
@@ -118,8 +170,8 @@ export default function AdminStudents() {
                   <User size={40} />
                 </div>
                 <h5 className="fw-bold mb-2">{selectedStudent.name}</h5>
-                <p className="text-secondary mb-1">MSSV: {selectedStudent.mssv}</p>
-                <p className="text-secondary small">Mã thẻ: {selectedStudent.rfid || 'Chưa có'}</p>
+                <p className="text-secondary mb-1">MSSV: {selectedStudent.code}</p>
+                <p className="text-secondary small">Mã thẻ: {selectedStudent.rfid_uid || 'Chưa có'}</p>
               </div>
             </div>
 
@@ -132,25 +184,19 @@ export default function AdminStudents() {
                     <button className="btn btn-outline-secondary d-flex align-items-center gap-2" onClick={() => openEditModal(selectedStudent)}>
                       <Pencil size={18} /> Chỉnh sửa
                     </button>
-                    <button className="btn btn-danger d-flex align-items-center gap-2">
+                    <button className="btn btn-danger d-flex align-items-center gap-2" onClick={() => handleDelete(selectedStudent.id)}>
                       <Trash2 size={18} /> Xóa
                     </button>
                   </div>
                 </div>
                 
                 <div className="list-group list-group-flush">
-                  {selectedStudent.classes.map((cls, idx) => (
-                    <div key={idx} className="list-group-item d-flex justify-content-between align-items-center py-3">
-                      <div>
-                        <span className="fw-semibold d-block text-dark">{cls}</span>
-                        <span className="small text-secondary">Đã tha gia điểm danh trong học kỳ này</span>
-                      </div>
-                      <span className="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill">Đã điểm danh</span>
+                  <div className="list-group-item d-flex justify-content-between align-items-center py-3">
+                    <div>
+                      <span className="fw-semibold d-block text-dark">{selectedStudent.class || 'Chưa phân lớp'}</span>
+                      <span className="small text-secondary">Lớp học hiện tại</span>
                     </div>
-                  ))}
-                  {selectedStudent.classes.length === 0 && (
-                     <div className="text-center text-secondary py-5">Sinh viên chưa điểm danh môn nào.</div>
-                  )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -170,11 +216,11 @@ export default function AdminStudents() {
               <div className="modal-body">
                 <div className="mb-3">
                   <label className="form-label fw-medium">Họ và tên</label>
-                  <input type="text" className="form-control" defaultValue={editingStudent?.name} />
+                  <input type="text" className="form-control" value={editName} onChange={(e) => setEditName(e.target.value)} />
                 </div>
                 <div className="mb-3">
                   <label className="form-label fw-medium">Mã số sinh viên (MSSV)</label>
-                  <input type="text" className="form-control" defaultValue={editingStudent?.mssv} />
+                  <input type="text" className="form-control" value={editCode} onChange={(e) => setEditCode(e.target.value)} />
                 </div>
                 <div className="mb-4">
                   <label className="form-label fw-medium text-primary">Mã thẻ RFID</label>
@@ -202,7 +248,7 @@ export default function AdminStudents() {
               </div>
               <div className="modal-footer border-top-0 pt-0">
                 <button type="button" className="btn btn-light" onClick={closeEditModal}>Hủy bỏ</button>
-                <button type="button" className="btn btn-primary px-4" onClick={closeEditModal}>Lưu OK</button>
+                <button type="button" className="btn btn-primary px-4" onClick={handleSave}>Lưu thông tin</button>
               </div>
             </div>
           </div>

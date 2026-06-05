@@ -8,6 +8,8 @@ const cors = require('cors');
 // Import routes
 const studentRoutes = require('./src/routes/studentRoutes');
 const attendanceRoutes = require('./src/routes/attendanceRoutes');
+const lecturerRoutes = require('./src/routes/lecturerRoutes');
+const classRoutes = require('./src/routes/classRoutes');
 
 const app = express();
 const server = http.createServer(app);
@@ -33,6 +35,8 @@ app.use((req, res, next) => {
 // REST API Routes
 app.use('/api/students', studentRoutes);
 app.use('/api/attendance', attendanceRoutes);
+app.use('/api/lecturers', lecturerRoutes);
+app.use('/api/classes', classRoutes);
 
 // Socket.io connection handler
 io.on('connection', (socket) => {

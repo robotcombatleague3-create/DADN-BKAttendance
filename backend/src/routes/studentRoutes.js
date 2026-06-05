@@ -8,4 +8,10 @@ router.get('/', studentController.getAllStudents);
 // PUT /api/students/:id/rfid
 router.put('/:id/rfid', studentController.assignRfid);
 
+// PUT /api/students/:id
+router.put('/:id', studentController.updateStudent);
+
+// DELETE /api/students/:id
+router.delete('/:id', studentController.deleteStudent);
+
 module.exports = router;

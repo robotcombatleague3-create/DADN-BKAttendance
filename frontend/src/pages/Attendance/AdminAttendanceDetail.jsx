@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { Users, CheckCircle, XCircle, Download, BarChart2, ChevronDown } from 'lucide-react';
+import { getClassAttendance } from '../../services/api';
 import './Attendance.css';
 
 export default function AdminAttendanceDetail() {
@@ -9,13 +10,27 @@ export default function AdminAttendanceDetail() {
   const location = useLocation();
   const basePath = location.pathname.match(/^\/[^/]+/)?.[0] || '';
 
+  const [students, setStudents] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const mockStudents = [
-    { mssv: '2110001', name: 'Nguyễn Văn A', status: 'present', time: '10:05 AM' },
-    { mssv: '2110002', name: 'Trần Thị B', status: 'absent', time: '-' },
-    { mssv: '2110003', name: 'Lê Văn C', status: 'late', time: '10:45 AM' },
-    { mssv: '2110004', name: 'Phạm Thị D', status: 'present', time: '10:02 AM' },
-  ];
+  useEffect(() => {
+    const fetchAttendance = async () => {
+      try {
+        const data = await getClassAttendance(classId || 3);
+        setStudents(data);
+      } catch (error) {
+        console.error("Lỗi khi tải chi tiết điểm danh:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAttendance();
+  }, [classId]);
+
+  const total = students.length;
+  const present = students.filter(s => s.status === 'present').length;
+  const late = students.filter(s => s.status === 'late').length;
+  const absent = students.filter(s => s.status === 'absent').length;
 
   return (
     <div className="content-container w-full h-full flex flex-col flex-1">
@@ -25,21 +40,21 @@ export default function AdminAttendanceDetail() {
           <div className="summary-card">
             <div className="summary-icon total"><Users size={26} /></div>
             <div className="summary-info">
-               <span>100</span>
+               <span>{total}</span>
                <span>Tham gia</span>
             </div>
           </div>
           <div className="summary-card">
             <div className="summary-icon present"><CheckCircle size={26} /></div>
             <div className="summary-info">
-               <span>60</span>
-               <span>Có mặt</span>
+               <span>{present + late}</span>
+               <span>Có mặt (cả trễ)</span>
             </div>
           </div>
           <div className="summary-card">
             <div className="summary-icon absent"><XCircle size={26} /></div>
             <div className="summary-info">
-               <span>40</span>
+               <span>{absent}</span>
                <span>Vắng mặt</span>
             </div>
           </div>
@@ -79,7 +94,11 @@ export default function AdminAttendanceDetail() {
                  </tr>
                </thead>
                <tbody>
-                 {mockStudents.map((s, idx) => (
+                 {loading ? (
+                   <tr><td colSpan="4" className="text-center">Đang tải dữ liệu...</td></tr>
+                 ) : students.length === 0 ? (
+                   <tr><td colSpan="4" className="text-center">Lớp này chưa có sinh viên.</td></tr>
+                 ) : students.map((s, idx) => (
                    <tr key={idx}>
                      <td>{s.mssv}</td>
                      <td>{s.name}</td>
@@ -88,7 +107,7 @@ export default function AdminAttendanceDetail() {
                          {s.status === 'present' ? 'Có mặt' : s.status === 'absent' ? 'Vắng' : 'Muộn'}
                        </span>
                      </td>
-                     <td>{s.time}</td>
+                     <td>{s.time || '-'}</td>
                    </tr>
                  ))}
                </tbody>
