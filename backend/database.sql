@@ -90,14 +90,22 @@ INSERT INTO students (student_code, name) VALUES
 ('2301002', 'Nguyễn Văn AB'),
 ('2301003', 'Lê Thị A'),
 ('2301004', 'Trần Bảo B'),
-('2301005', 'Phạm Quỳnh C');
+('2301005', 'Phạm Quỳnh C'),
+('2310000', 'Vo Thi Xuan Thuy'),
+('2310001', 'Thi Minh Thuc'),
+('2310002', 'Huy Thinh'),
+('2310003', 'Tran Quang Vinh');
 
 INSERT INTO rfid_cards (rfid_uid, user_id, student_id) VALUES 
 ('A3B4C5D6', NULL, 1),
 ('B4C5D6E7', NULL, 2),
 ('C5D6E7F8', NULL, 3),
 ('D6E7F8G9', NULL, 4),
-('E7F8G9H0', NULL, 5);
+('E7F8G9H0', NULL, 5),
+('EA68F834', NULL, 6),
+('3297ABC2', NULL, 7),
+('82AB379F', NULL, 8),
+('B52A1012', NULL, 9);
 
 -- Giả định lecturer_id cho Trần Thị A là 1 sau lệnh insert ở bước 2
 INSERT INTO classes (class_name, lecturer_id) VALUES 
@@ -106,6 +114,7 @@ INSERT INTO classes (class_name, lecturer_id) VALUES
 
 INSERT INTO class_students (class_id, student_id) VALUES 
 (1, 1), (1, 2), (1, 3), (1, 4), (1, 5),
+(1, 6), (1, 7), (1, 8), (1, 9),
 (2, 1), (2, 3), (2, 5);
 
 -- Tạo session cho quá khứ và hôm nay
