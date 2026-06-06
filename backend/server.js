@@ -63,7 +63,10 @@ mqttClient.on('connect', () => {
     mqttClient.subscribe(TOPIC_FROM_ESP);
 });
 
-mqttClient.on('message', (topic, message) => {
+// Import controller for DB logic
+const attendanceController = require('./src/controllers/attendanceController');
+
+mqttClient.on('message', async (topic, message) => {
     if (topic === TOPIC_FROM_ESP) {
         const msgStr = message.toString();
         console.log(`[MQTT nhận]: ${msgStr}`);
@@ -83,6 +86,9 @@ mqttClient.on('message', (topic, message) => {
                 uid: uidHex,
                 timestamp: new Date().toLocaleTimeString()
             });
+
+            // Process DB logic directly from server (Hardware to DB)
+            await attendanceController.processScanLogic(uidHex, io);
         } else {
             io.emit('new_data', {
                 raw: msgStr,

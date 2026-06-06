@@ -221,44 +221,28 @@ exports.getOverallStats = async (req, res) => {
   }
 };
 
-// 4. API nhận dữ liệu từ ESP32 hoặc Trang Test khi quét thẻ
-exports.scanCard = async (req, res) => {
-  const { rfid_uid } = req.body;
-
-  if (!rfid_uid) {
-    return res.status(400).json({ success: false, message: 'Thiếu RFID UID' });
-  }
-
+exports.processScanLogic = async (rfid_uid, io) => {
   try {
-    // 1. Gọi Model để kiểm tra thông tin sinh viên
     const student = await StudentModel.findByRfid(rfid_uid);
-
     if (!student) {
-      return res.status(404).json({ 
-        success: false, 
-        message: "Thẻ không hợp lệ hoặc chưa được đăng ký!" 
-      });
+      return { success: false, statusCode: 404, message: "Thẻ không hợp lệ hoặc chưa được đăng ký!" };
     }
 
-    // 2. Gọi Model để tìm session đang hoạt động
     const session = await SessionModel.getActiveSession();
-
     if (!session) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Không có buổi học nào đang diễn ra tại thời điểm này!' 
-      });
+      return { success: false, statusCode: 400, message: 'Không có buổi học nào đang diễn ra tại thời điểm này!' };
     }
 
     const { session_id, start_time, late_threshold } = session;
     const currentTime = new Date();
     const timeString = currentTime.toTimeString().split(' ')[0]; // HH:MM:SS
     
-    // 3. Sử dụng Strategy Pattern để xác định status
+    // Sử dụng Strategy Pattern để xác định status
     const status = attendanceContext.determineStatus(timeString, start_time, late_threshold);
 
-    // 4. Gọi Model để thực hiện lưu điểm danh
+    // Gọi Model để thực hiện lưu điểm danh
     await AttendanceModel.recordScan(session_id, student.student_id, status);
+    
     const responseData = {
       success: true,
       data: {
@@ -269,7 +253,6 @@ exports.scanCard = async (req, res) => {
     };
 
     // Phát event cho Frontend
-    const io = req.io;
     if (io) {
       io.emit('new_attendance', {
         ...responseData.data,
@@ -278,12 +261,27 @@ exports.scanCard = async (req, res) => {
       });
     }
 
-    res.status(200).json(responseData);
-
+    return responseData;
   } catch (error) {
-    console.error('Database error in scanCard:', error);
-    res.status(500).json({ success: false, message: 'Lỗi hệ thống khi xử lý thẻ' });
+    console.error('Database error in processScanLogic:', error);
+    return { success: false, statusCode: 500, message: 'Lỗi hệ thống khi xử lý thẻ' };
   }
+};
+
+// 4. API nhận dữ liệu từ ESP32 hoặc Trang Test khi quét thẻ
+exports.scanCard = async (req, res) => {
+  const { rfid_uid } = req.body;
+
+  if (!rfid_uid) {
+    return res.status(400).json({ success: false, message: 'Thiếu RFID UID' });
+  }
+
+  const result = await exports.processScanLogic(rfid_uid, req.io);
+  if (!result.success) {
+    return res.status(result.statusCode).json({ success: false, message: result.message });
+  }
+
+  res.status(200).json(result);
 };
 
 // 5. Lấy lịch sử điểm danh của 1 Sinh viên cụ thể
