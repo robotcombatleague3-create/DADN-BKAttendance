@@ -71,15 +71,16 @@ mqttClient.on('message', async (topic, message) => {
         const msgStr = message.toString();
         console.log(`[MQTT nhận]: ${msgStr}`);
         
-        // 👉 lấy uidHash dạng DEC
-        const match = msgStr.match(/uidHash:\s*(\d+)/);
+        // 👉 lấy uidHash dạng HEX từ chuỗi MQTT (ESP32 đã gửi dưới dạng HEX: uidHash: ea68f834)
+        const match = msgStr.match(/uidHash:\s*([0-9a-fA-F]+)/i);
 
         if (match) {
-            const uidDec = parseInt(match[1]);
-            const uidHex = uidDec.toString(16).toUpperCase();
-            const newMsg = msgStr.replace(/uidHash:\s*\d+/, `uidHash: ${uidHex}`);
+            const uidHex = match[1].toUpperCase();
+            
+            // Xóa logic parse thập phân dư thừa
+            const newMsg = msgStr; // Không cần replace vì chuỗi gốc đã chứa đúng UID
 
-            console.log(`[Converted HEX] ${newMsg}`);
+            console.log(`[Extracted HEX] ${uidHex}`);
             io.emit('new_data', {
                 raw: msgStr,
                 formatted: newMsg,
