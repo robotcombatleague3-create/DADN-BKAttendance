@@ -13,6 +13,7 @@ import AttendanceList from './pages/Attendance/AttendanceList';
 import AttendanceDetail from './pages/Attendance/AttendanceDetail';
 import AttendanceStats from './pages/Attendance/AttendanceStats';
 import TestRFID from './pages/TestRFID';
+import ClassroomDisplay from './pages/ClassroomDisplay';
 
 // Auth Pages
 import Landing from './pages/Auth/Landing';
@@ -87,6 +88,7 @@ function App() {
             <Route path="profile" element={<LecturerProfile />} />
           </Route>
           <Route path="/test-rfid" element={<TestRFID />} />
+          <Route path="/classroom-display" element={<ClassroomDisplay />} />
         </Routes>
       </Router>
     </FlashContext.Provider>

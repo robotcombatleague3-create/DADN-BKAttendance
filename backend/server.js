@@ -88,7 +88,16 @@ mqttClient.on('message', async (topic, message) => {
             });
 
             // Process DB logic directly from server (Hardware to DB)
-            await attendanceController.processScanLogic(uidHex, io);
+            const result = await attendanceController.processScanLogic(uidHex, io);
+            
+            // Nếu không thành công, phát sự kiện lỗi cho Classroom Display
+            if (!result.success) {
+                io.emit('scan_error', { 
+                    message: result.message,
+                    uid: uidHex,
+                    timestamp: new Date().toLocaleTimeString()
+                });
+            }
         } else {
             io.emit('new_data', {
                 raw: msgStr,
