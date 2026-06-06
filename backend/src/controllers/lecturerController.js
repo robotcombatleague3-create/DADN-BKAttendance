@@ -1,4 +1,4 @@
-const db = require('../config/database');
+const db = require('../config/db');
 const LecturerModel = require('../models/LecturerModel');
 
 // 1. Lấy thông tin Hồ sơ Giảng viên
