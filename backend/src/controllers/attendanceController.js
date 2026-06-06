@@ -137,7 +137,6 @@ exports.getHistory = async (req, res) => {
   }
 };
 
-<<<<<<< HEAD
 // 3. Lấy thống kê cơ bản cho biểu đồ
 exports.getClassStats = async (req, res) => {
   try {
