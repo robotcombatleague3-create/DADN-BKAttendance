@@ -14,7 +14,7 @@ export default function AttendanceList() {
 
   useEffect(() => {
     // Gọi API với lecturerId=1 (Hardcode tạm thời)
-    fetch('http://localhost:3000/api/classes?lecturerId=1')
+    fetch('http://localhost:3000/api/classes/lecturer?lecturerId=1')
       .then(res => res.json())
       .then(data => {
         if (data.success) {
