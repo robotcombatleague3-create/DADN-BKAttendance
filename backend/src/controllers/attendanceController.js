@@ -1,7 +1,7 @@
 const StudentModel = require('../models/StudentModel');
 const SessionModel = require('../models/SessionModel');
 const AttendanceModel = require('../models/AttendanceModel');
-const db = require('../config/database'); // Ensure db is imported if used
+const db = require('../config/db'); // Ensure db is imported if used
 // ==================== STRATEGY PATTERN FOR ATTENDANCE STATUS ====================
 // Interface/Base Strategy
 class StatusStrategy {
