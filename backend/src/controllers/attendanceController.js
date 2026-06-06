@@ -1,5 +1,7 @@
-const db = require('../config/db');
-
+const StudentModel = require('../models/StudentModel');
+const SessionModel = require('../models/SessionModel');
+const AttendanceModel = require('../models/AttendanceModel');
+const db = require('../config/database'); // Ensure db is imported if used
 // ==================== STRATEGY PATTERN FOR ATTENDANCE STATUS ====================
 // Interface/Base Strategy
 class StatusStrategy {
@@ -135,6 +137,7 @@ exports.getHistory = async (req, res) => {
   }
 };
 
+<<<<<<< HEAD
 // 3. Lấy thống kê cơ bản cho biểu đồ
 exports.getClassStats = async (req, res) => {
   try {
@@ -198,6 +201,27 @@ exports.getClassStats = async (req, res) => {
   }
 };
 
+exports.getClassAttendance = async (req, res) => {
+  const { classId } = req.params;
+  try {
+    const data = await AttendanceModel.getClassAttendance(classId);
+    res.json({ success: true, data });
+  } catch (error) {
+    console.error('Database error in getClassAttendance:', error);
+    res.status(500).json({ success: false, message: 'Lỗi máy chủ khi lấy chi tiết điểm danh' });
+  }
+};
+
+exports.getOverallStats = async (req, res) => {
+  try {
+    const stats = await AttendanceModel.getOverallStats();
+    res.json({ success: true, data: stats });
+  } catch (error) {
+    console.error('Database error in getOverallStats:', error);
+    res.status(500).json({ success: false, message: 'Lỗi máy chủ khi lấy thống kê' });
+  }
+};
+
 // 4. API nhận dữ liệu từ ESP32 hoặc Trang Test khi quét thẻ
 exports.scanCard = async (req, res) => {
   const { rfid_uid } = req.body;
@@ -207,54 +231,35 @@ exports.scanCard = async (req, res) => {
   }
 
   try {
-    // 1. Tìm sinh viên qua RFID
-    const [studentRows] = await db.execute(`
-      SELECT s.student_id, s.student_code, s.name as student_name
-      FROM rfid_cards rc
-      JOIN students s ON rc.student_id = s.student_id
-      WHERE rc.rfid_uid = ?
-    `, [rfid_uid]);
+    // 1. Gọi Model để kiểm tra thông tin sinh viên
+    const student = await StudentModel.findByRfid(rfid_uid);
 
-    if (studentRows.length === 0) {
+    if (!student) {
       return res.status(404).json({ 
         success: false, 
         message: "Thẻ không hợp lệ hoặc chưa được đăng ký!" 
       });
     }
 
-    const student = studentRows[0];
+    // 2. Gọi Model để tìm session đang hoạt động
+    const session = await SessionModel.getActiveSession();
 
-    // 2. Tìm session đang hoạt động
-    const [sessionRows] = await db.execute(`
-      SELECT session_id, start_time, late_threshold 
-      FROM sessions 
-      WHERE session_date = CURDATE() 
-      AND CURTIME() BETWEEN start_time AND end_time
-      LIMIT 1
-    `);
-
-    if (sessionRows.length === 0) {
+    if (!session) {
       return res.status(400).json({ 
         success: false, 
         message: 'Không có buổi học nào đang diễn ra tại thời điểm này!' 
       });
     }
 
-    const { session_id, start_time, late_threshold } = sessionRows[0];
+    const { session_id, start_time, late_threshold } = session;
     const currentTime = new Date();
     const timeString = currentTime.toTimeString().split(' ')[0]; // HH:MM:SS
     
     // 3. Sử dụng Strategy Pattern để xác định status
     const status = attendanceContext.determineStatus(timeString, start_time, late_threshold);
 
-    // 4. Thực hiện INSERT/UPDATE vào bảng attendance_logs
-    await db.execute(`
-      INSERT INTO attendance_logs (session_id, student_id, checkin_time, status)
-      VALUES (?, ?, NOW(), ?)
-      ON DUPLICATE KEY UPDATE checkin_time = NOW(), status = VALUES(status)
-    `, [session_id, student.student_id, status]);
-
-    // 5. Trả về HTTP 200 với JSON
+    // 4. Gọi Model để thực hiện lưu điểm danh
+    await AttendanceModel.recordScan(session_id, student.student_id, status);
     const responseData = {
       success: true,
       data: {

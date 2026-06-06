@@ -8,6 +8,12 @@ router.get('/history', attendanceController.getHistory);
 // GET /api/attendance/student/:studentId
 router.get('/student/:studentId', attendanceController.getStudentAttendanceHistory);
 
+// GET /api/attendance/class/:classId
+router.get('/class/:classId', attendanceController.getClassAttendance);
+
+// GET /api/attendance/stats
+router.get('/stats', attendanceController.getOverallStats);
+
 // POST /api/attendance/scan
 router.post('/scan', attendanceController.scanCard);
 

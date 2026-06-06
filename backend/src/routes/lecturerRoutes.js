@@ -11,4 +11,7 @@ router.put('/profile/:userId', lecturerController.updateProfile);
 // GET /api/lecturers/history/:userId
 router.get('/history/:userId', lecturerController.getTeachingHistory);
 
+// GET /api/lecturers
+router.get('/', lecturerController.getAllLecturers);
+
 module.exports = router;

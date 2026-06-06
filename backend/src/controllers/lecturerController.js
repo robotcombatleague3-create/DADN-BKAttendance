@@ -1,4 +1,5 @@
-const db = require('../config/db');
+const db = require('../config/database');
+const LecturerModel = require('../models/LecturerModel');
 
 // 1. Lấy thông tin Hồ sơ Giảng viên
 exports.getProfile = async (req, res) => {
@@ -137,5 +138,15 @@ exports.getTeachingHistory = async (req, res) => {
   } catch (error) {
     console.error('Database error in getTeachingHistory:', error);
     res.status(500).json({ success: false, message: 'Lỗi máy chủ khi lấy lịch sử giảng dạy' });
+  }
+};
+
+exports.getAllLecturers = async (req, res) => {
+  try {
+    const lecturers = await LecturerModel.getAll();
+    res.json({ success: true, data: lecturers });
+  } catch (error) {
+    console.error('Database error in getAllLecturers:', error);
+    res.status(500).json({ success: false, message: 'Lỗi máy chủ khi lấy danh sách giảng viên' });
   }
 };

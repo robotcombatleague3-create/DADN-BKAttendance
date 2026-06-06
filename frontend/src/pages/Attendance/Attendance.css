@@ -247,6 +247,8 @@
   padding: 14px 16px;
   text-align: left;
   border-bottom: 1px solid #e2e8f0;
+  color: #0f172a;
+  font-weight: 500;
 }
 
 .attendance-table th {

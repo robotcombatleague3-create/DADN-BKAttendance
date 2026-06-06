@@ -1,13 +1,37 @@
 const API_URL = 'http://localhost:3000/api';
 
 export const getHistory = async () => {
-  const res = await fetch(`${API_URL}/attendance`);
+  const res = await fetch(`${API_URL}/attendance/history`);
+  const data = await res.json();
+  return data.data || [];
+};
+
+export const getClassAttendance = async (classId) => {
+  const res = await fetch(`${API_URL}/attendance/class/${classId}`);
+  const data = await res.json();
+  return data.data || [];
+};
+
+export const getOverallStats = async () => {
+  const res = await fetch(`${API_URL}/attendance/stats`);
   const data = await res.json();
   return data.data || [];
 };
 
 export const getStudents = async () => {
   const res = await fetch(`${API_URL}/students`);
+  const data = await res.json();
+  return data.data || [];
+};
+
+export const getLecturers = async () => {
+  const res = await fetch(`${API_URL}/lecturers`);
+  const data = await res.json();
+  return data.data || [];
+};
+
+export const getClasses = async () => {
+  const res = await fetch(`${API_URL}/classes`);
   const data = await res.json();
   return data.data || [];
 };
@@ -19,6 +43,24 @@ export const assignRfid = async (studentId, rfidUid) => {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({ rfidUid })
+  });
+  return res.json();
+};
+
+export const updateStudent = async (studentId, studentData) => {
+  const res = await fetch(`${API_URL}/students/${studentId}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(studentData)
+  });
+  return res.json();
+};
+
+export const deleteStudent = async (studentId) => {
+  const res = await fetch(`${API_URL}/students/${studentId}`, {
+    method: 'DELETE'
   });
   return res.json();
 };

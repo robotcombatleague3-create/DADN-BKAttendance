@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Filter, Users, Search } from 'lucide-react';
+import { getClasses } from '../../services/api';
 import './Attendance.css';
 
 export default function AdminAttendanceList() {
@@ -8,19 +9,29 @@ export default function AdminAttendanceList() {
   const location = useLocation();
   const basePath = location.pathname.replace(/\/attendance.*$/, '');
 
-  const dummyData = [
-    { id: 1, name: 'Nguyên lý ngôn ngữ lập trình L01 | H6-301', lecturer: 'GV: Trần Thị A', time: 'T3 10:00 - 11h50', students: 100, status: 'offline' },
-    { id: 2, name: 'Kiến trúc máy tính L02 | H1-201', lecturer: 'GV: Nguyễn Văn B', time: 'T4 07:00 - 09h50', students: 85, status: 'offline' },
-    { id: 3, name: 'Cơ sở dữ liệu L03 | H3-401', lecturer: 'GV: Phan T', time: 'T5 13:00 - 15h50', students: 120, status: 'online' },
-    { id: 4, name: 'Cấu trúc dữ liệu và giải thuật L04 | H1-402', lecturer: 'GV: Lê Thị C', time: 'T6 07:00 - 09h50', students: 110, status: 'online' }
-  ];
+  const [classes, setClasses] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadClasses = async () => {
+      try {
+        const data = await getClasses();
+        setClasses(data);
+      } catch (err) {
+        console.error("Lỗi tải danh sách lớp học:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadClasses();
+  }, []);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('ALL');
 
-  const filteredData = dummyData?.filter(item => {
+  const filteredData = classes?.filter(item => {
     const matchSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                        item.lecturer.toLowerCase().includes(searchTerm.toLowerCase());
+                        (item.lecturer && item.lecturer.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchFilter = filterStatus === 'ALL' || item.status === filterStatus;
     return matchSearch && matchFilter;
   });
@@ -57,8 +68,10 @@ export default function AdminAttendanceList() {
 
         {/* Rows */}
         <div className="list-rows flex-1 w-full h-full" style={{ overflowY: 'auto' }}>
-          {!filteredData || filteredData.length === 0 ? (
-            <div className="text-center p-5 text-secondary">Đang tải / Không có dữ liệu.</div>
+          {loading ? (
+            <div className="text-center p-5 text-secondary">Đang tải dữ liệu từ server...</div>
+          ) : !filteredData || filteredData.length === 0 ? (
+            <div className="text-center p-5 text-secondary">Không có dữ liệu.</div>
           ) : (
             filteredData?.map((item) => (
               <div 
