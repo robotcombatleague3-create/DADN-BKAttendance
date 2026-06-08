@@ -11,6 +11,7 @@ export default function AdminAttendanceDetail() {
   const basePath = location.pathname.match(/^\/[^/]+/)?.[0] || '';
 
   const [students, setStudents] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -26,6 +27,11 @@ export default function AdminAttendanceDetail() {
     };
     fetchAttendance();
   }, [classId]);
+
+  const filteredStudents = students.filter(s => {
+    const term = searchTerm.toLowerCase();
+    return s.mssv?.toLowerCase().includes(term) || s.name?.toLowerCase().includes(term);
+  });
 
   const total = students.length;
   const present = students.filter(s => s.status === 'present').length;
@@ -65,7 +71,13 @@ export default function AdminAttendanceDetail() {
           <div className="board-top">
             <span className="board-title">Lớp: L0{classId || '3'}</span>
             <div className="board-controls">
-              <input type="text" placeholder="Tìm kiếm..." className="board-search" />
+              <input 
+                type="text" 
+                placeholder="Tìm kiếm MSSV, Họ tên..." 
+                className="board-search"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
               <button className="board-btn">
                 <Download size={18} /> Xuất <ChevronDown size={14} />
               </button>
@@ -96,9 +108,9 @@ export default function AdminAttendanceDetail() {
               <tbody>
                 {loading ? (
                   <tr><td colSpan="4" className="text-center">Đang tải dữ liệu...</td></tr>
-                ) : students.length === 0 ? (
+                ) : filteredStudents.length === 0 ? (
                   <tr><td colSpan="4" className="text-center">Lớp này chưa có sinh viên.</td></tr>
-                ) : students.map((s, idx) => (
+                ) : filteredStudents.map((s, idx) => (
                   <tr key={idx}>
                     <td>{s.mssv}</td>
                     <td>{s.name}</td>

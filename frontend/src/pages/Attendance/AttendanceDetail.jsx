@@ -11,6 +11,7 @@ export default function AttendanceDetail() {
   const basePath = location.pathname.match(/^\/[^/]+/)?.[0] || '';
 
   const [historyData, setHistoryData] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [stats, setStats] = useState({ total: 0, present: 0, absent: 0, late: 0 });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -111,6 +112,11 @@ export default function AttendanceDetail() {
     };
   }, [classId]);
 
+  const filteredHistoryData = historyData.filter(s => {
+    const term = searchTerm.toLowerCase();
+    return s.student_code?.toLowerCase().includes(term) || s.student_name?.toLowerCase().includes(term);
+  });
+
   return (
     <div className="content-container">
       <div className="detail-grid">
@@ -144,7 +150,13 @@ export default function AttendanceDetail() {
           <div className="board-top">
             <span className="board-title">Chi tiết điểm danh - Lớp ID: {classId}</span>
             <div className="board-controls">
-              <input type="text" placeholder="Tìm kiếm..." className="board-search" />
+              <input 
+                type="text" 
+                placeholder="Tìm kiếm MSSV, Họ tên..." 
+                className="board-search" 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
               <button className="board-btn" onClick={handleExportAttendance}>
                 <Download size={18} /> Xuất <ChevronDown size={14}/>
               </button>
@@ -170,7 +182,7 @@ export default function AttendanceDetail() {
                   </tr>
                 </thead>
                 <tbody>
-                  {historyData.length > 0 ? historyData.map((s, idx) => {
+                  {filteredHistoryData.length > 0 ? filteredHistoryData.map((s, idx) => {
                     let badgeClass = s.status === 'Present' ? 'present' : (s.status === 'Absent' ? 'absent' : 'late');
                     let statusText = s.status === 'Present' ? 'Có mặt' : (s.status === 'Absent' ? 'Vắng' : 'Đi trễ');
                     let timeText = s.checkin_time ? new Date(s.checkin_time).toLocaleString('vi-VN') : '-';
