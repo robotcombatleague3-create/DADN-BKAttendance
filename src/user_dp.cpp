@@ -1,13 +1,7 @@
 #include "user_db.h"
 
-User database[] = {
-  {0xEA68F834, 0, "Vo Thi Xuan Thuy"}, 
-  {0x3297ABC2, 1, "Thi Minh Thuc"},
-  {0x82AB379F, 2, "Huy Thinh"},
-  {0xB52A1012, 3, "Tran Quang Vinh"}
-};
-
-const int totalCards = sizeof(database) / sizeof(database[0]);
+User database[MAX_USERS];
+int totalCards = 0;
 
 String formatMSSV(int index) {
     char buf[10]; 

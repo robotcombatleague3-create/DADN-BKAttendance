@@ -3,14 +3,16 @@
 
 #include <Arduino.h>
 
+#define MAX_USERS 100
+
 struct User {
   uint32_t uidHash;
   int idIndex;
   char name[32];
 };
 
-extern User database[];
-extern const int totalCards;
+extern User database[MAX_USERS];
+extern int totalCards;
 
 String formatMSSV(int index);
 int findUserIndex(uint32_t uidHash);

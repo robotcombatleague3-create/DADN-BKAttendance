@@ -139,10 +139,26 @@ export default function Students() {
     );
   }
 
+  const handleSyncHardware = async () => {
+    if (window.confirm('Bạn có chắc muốn đẩy dữ liệu xuống phần cứng?')) {
+      try {
+        const res = await fetch('http://localhost:3000/api/students/sync-hardware', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          alert(data.message);
+        } else {
+          alert('Lỗi: ' + data.message);
+        }
+      } catch (err) {
+        alert('Lỗi mạng khi đồng bộ phần cứng');
+      }
+    }
+  };
+
   return (
     <div className="students-container">
-      <div className="students-topbar-wrapper">
-        <div className="search-box">
+      <div className="students-topbar-wrapper d-flex justify-content-between align-items-center">
+        <div className="search-box flex-grow-1 me-3">
           <Search size={18} color="#888" />
           <input 
             type="text" 
@@ -151,6 +167,9 @@ export default function Students() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
+        <button className="btn btn-primary" onClick={handleSyncHardware} style={{ whiteSpace: 'nowrap' }}>
+          Đồng bộ phần cứng
+        </button>
       </div>
 
       <div className="student-list-container">

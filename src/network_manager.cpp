@@ -1,4 +1,6 @@
 #include "network_manager.h"
+#include "user_db.h"
+#include <ArduinoJson.h>
 
 const char* ssid = "Mon & Bom";
 const char* password = "10122000";
@@ -28,7 +30,30 @@ void mqtt_callback(char* topic, byte* payload, unsigned int length) {
     
     xSemaphoreTake(settingsMutex, portMAX_DELAY);
     
-    if (message.startsWith("DEADLINE:")) {
+    if (message.startsWith("SYNC_DB:")) {
+        String jsonStr = message.substring(8);
+        JsonDocument doc;
+        DeserializationError error = deserializeJson(doc, jsonStr);
+        if (!error) {
+            JsonArray arr = doc.as<JsonArray>();
+            int newTotal = 0;
+            for (JsonObject v : arr) {
+                if (newTotal >= MAX_USERS) break;
+                String uidHex = v["u"].as<String>();
+                database[newTotal].uidHash = strtoul(uidHex.c_str(), NULL, 16);
+                database[newTotal].idIndex = v["i"].as<int>();
+                strncpy(database[newTotal].name, v["n"].as<const char*>(), 31);
+                database[newTotal].name[31] = '\0';
+                newTotal++;
+            }
+            totalCards = newTotal;
+            Serial.printf("Dong bo thanh cong %d sinh vien\n", totalCards);
+        } else {
+            Serial.print("Loi parse JSON: ");
+            Serial.println(error.c_str());
+        }
+    }
+    else if (message.startsWith("DEADLINE:")) {
         shared_deadlineH = message.substring(9, 11).toInt();
         shared_deadlineM = message.substring(12, 14).toInt();
         shared_hasDeadline = true;

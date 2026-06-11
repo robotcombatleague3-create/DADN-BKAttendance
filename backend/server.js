@@ -55,6 +55,7 @@ server.listen(PORT, () => {
 });
 
 const mqttClient = mqtt.connect('mqtt://broker.hivemq.com');
+exports.mqttClient = mqttClient;
 const TOPIC_FROM_ESP = 'test/vinh/mqtt/send'; 
 const TOPIC_TO_ESP = 'test/vinh/mqtt/recv';   
 
