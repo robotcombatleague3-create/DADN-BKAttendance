@@ -96,13 +96,29 @@ export default function AdminStudents() {
     (student.code && student.code.toString().toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
+  const handleSyncHardware = async () => {
+    if (window.confirm('Bạn có chắc muốn đẩy dữ liệu xuống phần cứng?')) {
+      try {
+        const res = await fetch('http://localhost:3000/api/students/sync-hardware', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          alert(data.message);
+        } else {
+          alert('Lỗi: ' + data.message);
+        }
+      } catch (err) {
+        alert('Lỗi mạng khi đồng bộ phần cứng');
+      }
+    }
+  };
+
   return (
     <div className="container-fluid mt-3 flex-grow-1 d-flex flex-column">
       
       {!selectedStudent ? (
         /* TRẠNG THÁI 1: DANH SÁCH SINH VIÊN */
         <>
-          <div className="d-flex justify-content-end mb-3 gap-2">
+          <div className="d-flex justify-content-between mb-3 gap-2 align-items-center">
             <div className="input-group" style={{ width: '300px' }}>
               <span className="input-group-text bg-white"><Search size={18} /></span>
               <input 
@@ -113,9 +129,14 @@ export default function AdminStudents() {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <button className="btn btn-primary fw-medium d-flex align-items-center gap-2 text-white">
-              <User size={18} /> Thêm sinh viên
-            </button>
+            <div className="d-flex gap-2">
+              <button className="btn btn-outline-primary fw-medium d-flex align-items-center gap-2" onClick={handleSyncHardware}>
+                Đồng bộ phần cứng
+              </button>
+              <button className="btn btn-primary fw-medium d-flex align-items-center gap-2 text-white">
+                <User size={18} /> Thêm sinh viên
+              </button>
+            </div>
           </div>
 
           <div className="card border-0 shadow-sm flex-grow-1 mb-3">
