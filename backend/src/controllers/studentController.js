@@ -15,19 +15,30 @@ exports.syncHardware = async (req, res) => {
     const db = require('../config/db');
     const { mqttClient } = require('../../server');
     
-    // Lấy danh sách thẻ RFID kèm thông tin sinh viên
+    // Lấy danh sách thẻ RFID kèm thông tin sinh viên và 1 lớp học bất kỳ (cùng giờ bắt đầu)
     const [rows] = await db.execute(`
-      SELECT r.rfid_uid, s.student_id, s.name 
+      SELECT 
+        r.rfid_uid, 
+        s.student_id, 
+        s.name,
+        MAX(c.class_name) as class_name,
+        MAX(sess.start_time) as start_time
       FROM rfid_cards r 
       JOIN students s ON r.student_id = s.student_id
+      LEFT JOIN class_students cs ON s.student_id = cs.student_id
+      LEFT JOIN classes c ON cs.class_id = c.class_id
+      LEFT JOIN sessions sess ON c.class_id = sess.class_id
       WHERE r.rfid_uid IS NOT NULL
+      GROUP BY s.student_id, r.rfid_uid, s.name
     `);
 
     // Tạo mảng gọn nhẹ để gửi
     const payloadArray = rows.map(row => ({
       u: row.rfid_uid,
       i: row.student_id,
-      n: row.name
+      n: row.name,
+      c: row.class_name || "Chưa có lớp",
+      t: row.start_time || "00:00:00"
     }));
 
     const jsonStr = 'SYNC_DB:' + JSON.stringify(payloadArray);
