@@ -14,4 +14,13 @@ router.get('/history/:userId', lecturerController.getTeachingHistory);
 // GET /api/lecturers
 router.get('/', lecturerController.getAllLecturers);
 
+// POST /api/lecturers
+router.post('/', lecturerController.createLecturer);
+
+// PUT /api/lecturers/user/:userId
+router.put('/user/:userId', lecturerController.updateLecturer);
+
+// DELETE /api/lecturers/:lecturerId
+router.delete('/:lecturerId', lecturerController.deleteLecturer);
+
 module.exports = router;

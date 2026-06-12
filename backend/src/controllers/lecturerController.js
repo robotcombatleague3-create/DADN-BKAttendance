@@ -60,28 +60,20 @@ exports.updateProfile = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Tên giảng viên là bắt buộc' });
     }
 
-    // Kiểm tra xem giảng viên có tồn tại
-    const [lecturerRows] = await db.execute('SELECT lecturer_id FROM lecturers WHERE user_id = ?', [userId]);
-    
-    if (lecturerRows.length === 0) {
-      return res.status(404).json({ success: false, message: 'Không tìm thấy giảng viên' });
-    }
-    
-    const lecturerId = lecturerRows[0].lecturer_id;
-
-    // Update bảng users
-    await db.execute('UPDATE users SET name = ? WHERE user_id = ?', [name, userId]);
-
-    // Update bảng lecturers
-    await db.execute(
-      'UPDATE lecturers SET department = ?, specialization = ? WHERE lecturer_id = ?',
-      [department || null, specialization || null, lecturerId]
+    await LecturerModel.updateLecturer(
+      userId,
+      name,
+      null,
+      department,
+      specialization,
+      null
     );
 
     res.json({ success: true, message: 'Cập nhật hồ sơ thành công' });
   } catch (error) {
     console.error('Database error in updateProfile:', error);
-    res.status(500).json({ success: false, message: 'Lỗi máy chủ khi cập nhật hồ sơ' });
+    const message = error.sqlMessage || 'Lỗi máy chủ khi cập nhật hồ sơ';
+    res.status(400).json({ success: false, message });
   }
 };
 
@@ -148,5 +140,62 @@ exports.getAllLecturers = async (req, res) => {
   } catch (error) {
     console.error('Database error in getAllLecturers:', error);
     res.status(500).json({ success: false, message: 'Lỗi máy chủ khi lấy danh sách giảng viên' });
+  }
+};
+
+exports.createLecturer = async (req, res) => {
+  const { name, email, password, department, specialization, rfidUid } = req.body;
+
+  if (!name || !email) {
+    return res.status(400).json({ success: false, message: 'Tên và email là bắt buộc' });
+  }
+
+  try {
+    const result = await LecturerModel.createLecturer(
+      name, email, password, department, specialization, rfidUid || null
+    );
+    res.status(201).json({
+      success: true,
+      message: 'Thêm giảng viên thành công',
+      data: result
+    });
+  } catch (error) {
+    console.error('Database error in createLecturer:', error);
+    const message = error.sqlMessage || 'Lỗi máy chủ khi thêm giảng viên';
+    res.status(400).json({ success: false, message });
+  }
+};
+
+exports.updateLecturer = async (req, res) => {
+  const { userId } = req.params;
+  const { name, email, department, specialization, rfidUid } = req.body;
+
+  try {
+    await LecturerModel.updateLecturer(
+      userId,
+      name || null,
+      email || null,
+      department,
+      specialization,
+      rfidUid !== undefined ? rfidUid : null
+    );
+    res.json({ success: true, message: 'Cập nhật giảng viên thành công' });
+  } catch (error) {
+    console.error('Database error in updateLecturer:', error);
+    const message = error.sqlMessage || 'Lỗi máy chủ khi cập nhật giảng viên';
+    res.status(400).json({ success: false, message });
+  }
+};
+
+exports.deleteLecturer = async (req, res) => {
+  const { lecturerId } = req.params;
+
+  try {
+    await LecturerModel.deleteLecturer(lecturerId);
+    res.json({ success: true, message: 'Xóa giảng viên thành công' });
+  } catch (error) {
+    console.error('Database error in deleteLecturer:', error);
+    const message = error.sqlMessage || 'Lỗi máy chủ khi xóa giảng viên';
+    res.status(400).json({ success: false, message });
   }
 };

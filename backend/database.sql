@@ -1,5 +1,17 @@
--- SETUP: XÓA BẢNG CŨ NẾU ĐÃ TỒN TẠI
+-- SETUP: XÓA THỦ TỤC VÀ BẢNG CŨ NẾU ĐÃ TỒN TẠI
 SET NAMES utf8mb4;
+DROP PROCEDURE IF EXISTS sp_delete_lecturer;
+DROP PROCEDURE IF EXISTS sp_update_lecturer;
+DROP PROCEDURE IF EXISTS sp_add_lecturer;
+DROP PROCEDURE IF EXISTS sp_delete_student;
+DROP PROCEDURE IF EXISTS sp_update_student;
+DROP PROCEDURE IF EXISTS sp_add_student;
+DROP PROCEDURE IF EXISTS sp_lecturer_delete;
+DROP PROCEDURE IF EXISTS sp_lecturer_update;
+DROP PROCEDURE IF EXISTS sp_lecturer_insert;
+DROP PROCEDURE IF EXISTS sp_student_delete;
+DROP PROCEDURE IF EXISTS sp_student_update;
+DROP PROCEDURE IF EXISTS sp_student_insert;
 SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS attendance_logs;
 DROP TABLE IF EXISTS sessions;
@@ -77,6 +89,293 @@ CREATE TABLE attendance_logs (
     FOREIGN KEY (session_id) REFERENCES sessions(session_id) ON DELETE CASCADE,
     FOREIGN KEY (student_id) REFERENCES students(student_id) ON DELETE CASCADE
 );
+
+-- PHẦN 1.5: STORED PROCEDURES - THÊM / SỬA / XÓA SINH VIÊN & GIẢNG VIÊN
+DELIMITER $$
+
+CREATE PROCEDURE sp_add_student(
+    IN p_student_code VARCHAR(20),
+    IN p_name VARCHAR(100),
+    IN p_rfid_uid VARCHAR(50),
+    IN p_class_id INT
+)
+BEGIN
+    DECLARE v_student_id INT;
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    IF p_student_code IS NULL OR TRIM(p_student_code) = '' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Mã sinh viên không được để trống';
+    END IF;
+
+    IF p_name IS NULL OR TRIM(p_name) = '' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Tên sinh viên không được để trống';
+    END IF;
+
+    IF EXISTS (SELECT 1 FROM students WHERE student_code = p_student_code) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Mã sinh viên đã tồn tại';
+    END IF;
+
+    START TRANSACTION;
+
+    INSERT INTO students (student_code, name)
+    VALUES (TRIM(p_student_code), TRIM(p_name));
+    SET v_student_id = LAST_INSERT_ID();
+
+    IF p_rfid_uid IS NOT NULL AND TRIM(p_rfid_uid) != '' THEN
+        IF EXISTS (SELECT 1 FROM rfid_cards WHERE rfid_uid = UPPER(TRIM(p_rfid_uid))) THEN
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Mã RFID đã được sử dụng';
+        END IF;
+        INSERT INTO rfid_cards (rfid_uid, student_id)
+        VALUES (UPPER(TRIM(p_rfid_uid)), v_student_id);
+    END IF;
+
+    IF p_class_id IS NOT NULL THEN
+        IF NOT EXISTS (SELECT 1 FROM classes WHERE class_id = p_class_id) THEN
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Lớp học không tồn tại';
+        END IF;
+        INSERT IGNORE INTO class_students (class_id, student_id)
+        VALUES (p_class_id, v_student_id);
+    END IF;
+
+    COMMIT;
+    SELECT v_student_id AS student_id;
+END$$
+
+CREATE PROCEDURE sp_update_student(
+    IN p_student_id INT,
+    IN p_student_code VARCHAR(20),
+    IN p_name VARCHAR(100),
+    IN p_rfid_uid VARCHAR(50)
+)
+BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    IF NOT EXISTS (SELECT 1 FROM students WHERE student_id = p_student_id) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Không tìm thấy sinh viên';
+    END IF;
+
+    START TRANSACTION;
+
+    IF p_student_code IS NOT NULL AND TRIM(p_student_code) != '' THEN
+        IF EXISTS (
+            SELECT 1 FROM students
+            WHERE student_code = TRIM(p_student_code) AND student_id != p_student_id
+        ) THEN
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Mã sinh viên đã tồn tại';
+        END IF;
+        UPDATE students SET student_code = TRIM(p_student_code) WHERE student_id = p_student_id;
+    END IF;
+
+    IF p_name IS NOT NULL AND TRIM(p_name) != '' THEN
+        UPDATE students SET name = TRIM(p_name) WHERE student_id = p_student_id;
+    END IF;
+
+    IF p_rfid_uid IS NOT NULL THEN
+        IF TRIM(p_rfid_uid) = '' THEN
+            DELETE FROM rfid_cards WHERE student_id = p_student_id;
+        ELSE
+            IF EXISTS (
+                SELECT 1 FROM rfid_cards
+                WHERE rfid_uid = UPPER(TRIM(p_rfid_uid)) AND student_id != p_student_id
+            ) THEN
+                SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Mã RFID đã được sử dụng';
+            END IF;
+            DELETE FROM rfid_cards WHERE student_id = p_student_id;
+            INSERT INTO rfid_cards (rfid_uid, student_id)
+            VALUES (UPPER(TRIM(p_rfid_uid)), p_student_id)
+            ON DUPLICATE KEY UPDATE student_id = p_student_id;
+        END IF;
+    END IF;
+
+    COMMIT;
+END$$
+
+CREATE PROCEDURE sp_delete_student(
+    IN p_student_id INT
+)
+BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    IF NOT EXISTS (SELECT 1 FROM students WHERE student_id = p_student_id) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Không tìm thấy sinh viên';
+    END IF;
+
+    START TRANSACTION;
+    DELETE FROM rfid_cards WHERE student_id = p_student_id;
+    DELETE FROM students WHERE student_id = p_student_id;
+    COMMIT;
+END$$
+
+CREATE PROCEDURE sp_add_lecturer(
+    IN p_name VARCHAR(100),
+    IN p_email VARCHAR(100),
+    IN p_password VARCHAR(255),
+    IN p_department VARCHAR(100),
+    IN p_specialization VARCHAR(100),
+    IN p_rfid_uid VARCHAR(50)
+)
+BEGIN
+    DECLARE v_user_id INT;
+    DECLARE v_lecturer_id INT;
+    DECLARE v_password VARCHAR(255);
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    IF p_name IS NULL OR TRIM(p_name) = '' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Tên giảng viên không được để trống';
+    END IF;
+
+    IF p_email IS NULL OR TRIM(p_email) = '' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Email không được để trống';
+    END IF;
+
+    IF EXISTS (SELECT 1 FROM users WHERE email = TRIM(p_email)) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Email đã tồn tại';
+    END IF;
+
+    SET v_password = IFNULL(NULLIF(TRIM(p_password), ''), '123456');
+
+    START TRANSACTION;
+
+    INSERT INTO users (name, email, password, role)
+    VALUES (TRIM(p_name), TRIM(p_email), v_password, 'lecturer');
+    SET v_user_id = LAST_INSERT_ID();
+
+    INSERT INTO lecturers (user_id, department, specialization)
+    VALUES (v_user_id, NULLIF(TRIM(p_department), ''), NULLIF(TRIM(p_specialization), ''));
+    SET v_lecturer_id = LAST_INSERT_ID();
+
+    IF p_rfid_uid IS NOT NULL AND TRIM(p_rfid_uid) != '' THEN
+        IF EXISTS (SELECT 1 FROM rfid_cards WHERE rfid_uid = UPPER(TRIM(p_rfid_uid))) THEN
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Mã RFID đã được sử dụng';
+        END IF;
+        INSERT INTO rfid_cards (rfid_uid, user_id)
+        VALUES (UPPER(TRIM(p_rfid_uid)), v_user_id);
+    END IF;
+
+    COMMIT;
+    SELECT v_user_id AS user_id, v_lecturer_id AS lecturer_id;
+END$$
+
+CREATE PROCEDURE sp_update_lecturer(
+    IN p_user_id INT,
+    IN p_name VARCHAR(100),
+    IN p_email VARCHAR(100),
+    IN p_department VARCHAR(100),
+    IN p_specialization VARCHAR(100),
+    IN p_rfid_uid VARCHAR(50)
+)
+BEGIN
+    DECLARE v_lecturer_id INT;
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    SELECT lecturer_id INTO v_lecturer_id
+    FROM lecturers WHERE user_id = p_user_id;
+
+    IF v_lecturer_id IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Không tìm thấy giảng viên';
+    END IF;
+
+    START TRANSACTION;
+
+    IF p_name IS NOT NULL AND TRIM(p_name) != '' THEN
+        UPDATE users SET name = TRIM(p_name) WHERE user_id = p_user_id;
+    END IF;
+
+    IF p_email IS NOT NULL AND TRIM(p_email) != '' THEN
+        IF EXISTS (
+            SELECT 1 FROM users
+            WHERE email = TRIM(p_email) AND user_id != p_user_id
+        ) THEN
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Email đã tồn tại';
+        END IF;
+        UPDATE users SET email = TRIM(p_email) WHERE user_id = p_user_id;
+    END IF;
+
+    IF p_department IS NOT NULL OR p_specialization IS NOT NULL THEN
+        UPDATE lecturers
+        SET
+            department = IF(p_department IS NOT NULL, NULLIF(TRIM(p_department), ''), department),
+            specialization = IF(p_specialization IS NOT NULL, NULLIF(TRIM(p_specialization), ''), specialization)
+        WHERE lecturer_id = v_lecturer_id;
+    END IF;
+
+    IF p_rfid_uid IS NOT NULL THEN
+        IF TRIM(p_rfid_uid) = '' THEN
+            DELETE FROM rfid_cards WHERE user_id = p_user_id;
+        ELSE
+            IF EXISTS (
+                SELECT 1 FROM rfid_cards
+                WHERE rfid_uid = UPPER(TRIM(p_rfid_uid)) AND user_id != p_user_id
+            ) THEN
+                SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Mã RFID đã được sử dụng';
+            END IF;
+            DELETE FROM rfid_cards WHERE user_id = p_user_id;
+            INSERT INTO rfid_cards (rfid_uid, user_id)
+            VALUES (UPPER(TRIM(p_rfid_uid)), p_user_id)
+            ON DUPLICATE KEY UPDATE user_id = p_user_id;
+        END IF;
+    END IF;
+
+    COMMIT;
+END$$
+
+CREATE PROCEDURE sp_delete_lecturer(
+    IN p_lecturer_id INT
+)
+BEGIN
+    DECLARE v_user_id INT;
+    DECLARE v_class_count INT DEFAULT 0;
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    SELECT user_id INTO v_user_id
+    FROM lecturers WHERE lecturer_id = p_lecturer_id;
+
+    IF v_user_id IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Không tìm thấy giảng viên';
+    END IF;
+
+    SELECT COUNT(*) INTO v_class_count
+    FROM classes WHERE lecturer_id = p_lecturer_id;
+
+    IF v_class_count > 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Không thể xóa: giảng viên đang phụ trách lớp học';
+    END IF;
+
+    START TRANSACTION;
+    DELETE FROM rfid_cards WHERE user_id = v_user_id;
+    DELETE FROM users WHERE user_id = v_user_id;
+    COMMIT;
+END$$
+
+DELIMITER ;
 
 -- PHẦN 2: DML - CHÈN DỮ LIỆU MẪU (DUMMY DATA)
 INSERT INTO users (name, email, password, role) VALUES 
