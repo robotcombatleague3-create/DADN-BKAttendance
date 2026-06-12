@@ -34,6 +34,9 @@ app.use((req, res, next) => {
 });
 
 // REST API Routes
+const authRoutes = require('./src/routes/authRoutes');
+app.use('/api/auth', authRoutes);
+
 app.use('/api/students', studentRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/classes', classRoutes);

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, User, Pencil, Trash2, X, ChevronLeft, ScanLine, UserPlus } from 'lucide-react';
-import { getLecturers } from '../../services/api';
+import { getLecturers, createLecturer, updateLecturer, deleteLecturer } from '../../services/api';
 
 export default function AdminLecturers() {
   const [lecturers, setLecturers] = useState([]);
@@ -24,13 +24,28 @@ export default function AdminLecturers() {
   // Edit Modal State
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingLecturer, setEditingLecturer] = useState(null);
+  const [editName, setEditName] = useState("");
+  const [editKhoa, setEditKhoa] = useState("");
+  const [editEmail, setEditEmail] = useState(""); // Email is needed for Create
   const [rfidValue, setRfidValue] = useState("");
   const [isScanning, setIsScanning] = useState(false);
 
   const openEditModal = (lecturer, e) => {
     if (e) e.stopPropagation();
     setEditingLecturer(lecturer);
+    setEditName(lecturer.name || '');
+    setEditKhoa(lecturer.khoa || '');
+    setEditEmail(lecturer.email || '');
     setRfidValue(lecturer.rfid_uid || '');
+    setShowEditModal(true);
+  };
+
+  const openAddModal = () => {
+    setEditingLecturer(null);
+    setEditName("");
+    setEditKhoa("");
+    setEditEmail("");
+    setRfidValue("");
     setShowEditModal(true);
   };
 
@@ -38,6 +53,58 @@ export default function AdminLecturers() {
     setShowEditModal(false);
     setEditingLecturer(null);
     setIsScanning(false);
+  };
+
+  const handleSave = async () => {
+    try {
+      let res;
+      if (editingLecturer) {
+        res = await updateLecturer(editingLecturer.user_id, {
+          name: editName,
+          khoa: editKhoa,
+          rfidUid: rfidValue
+        });
+      } else {
+        res = await createLecturer({
+          name: editName,
+          khoa: editKhoa,
+          email: editEmail,
+          password: '123456', // Default password
+          rfidUid: rfidValue
+        });
+      }
+      
+      if (res && !res.success) {
+        alert("Lỗi: " + (res.message || "Không thể lưu thông tin"));
+        return;
+      }
+      
+      const data = await getLecturers();
+      setLecturers(data);
+      
+      if (selectedLecturer && editingLecturer && selectedLecturer.user_id === editingLecturer.user_id) {
+         setSelectedLecturer({...selectedLecturer, name: editName, khoa: editKhoa, rfid_uid: rfidValue});
+      }
+      closeEditModal();
+    } catch (err) {
+      console.error(err);
+      alert(editingLecturer ? "Lỗi cập nhật giảng viên" : "Lỗi thêm giảng viên");
+    }
+  };
+
+  const handleDelete = async (userId) => {
+    if (!window.confirm("Bạn có chắc chắn muốn xóa giảng viên này? Thao tác này cũng xóa luôn tài khoản đăng nhập của họ!")) return;
+    try {
+      await deleteLecturer(userId);
+      const data = await getLecturers();
+      setLecturers(data);
+      if (selectedLecturer && selectedLecturer.user_id === userId) {
+        setSelectedLecturer(null);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Lỗi xóa giảng viên");
+    }
   };
 
   const handleScanRfid = () => {
@@ -51,8 +118,8 @@ export default function AdminLecturers() {
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredLecturers = lecturers?.filter(lecturer => 
-    lecturer.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    (lecturer.khoa && lecturer.khoa.toLowerCase().includes(searchTerm.toLowerCase()))
+    (lecturer?.name || '').toLowerCase().includes((searchTerm || '').toLowerCase()) || 
+    (lecturer?.khoa || '').toLowerCase().includes((searchTerm || '').toLowerCase())
   );
 
   return (
@@ -72,7 +139,7 @@ export default function AdminLecturers() {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <button className="btn btn-primary fw-medium d-flex align-items-center gap-2 text-white">
+            <button className="btn btn-primary fw-medium d-flex align-items-center gap-2 text-white" onClick={openAddModal}>
               <User size={18} /> Thêm giảng viên
             </button>
           </div>
@@ -104,7 +171,7 @@ export default function AdminLecturers() {
                       <button className="btn btn-outline-primary btn-sm rounded" onClick={(e) => openEditModal(lecturer, e)} title="Chỉnh sửa">
                         <Pencil size={18} />
                       </button>
-                      <button className="btn btn-outline-danger btn-sm rounded" onClick={(e) => { e.stopPropagation(); }} title="Xóa">
+                      <button className="btn btn-outline-danger btn-sm rounded" onClick={(e) => { e.stopPropagation(); handleDelete(lecturer.user_id); }} title="Xóa">
                         <Trash2 size={18} />
                       </button>
                     </div>
@@ -143,7 +210,7 @@ export default function AdminLecturers() {
                     <button className="btn btn-primary d-flex align-items-center gap-2 text-white" onClick={() => openEditModal(selectedLecturer)}>
                       <Pencil size={18} /> Chỉnh sửa
                     </button>
-                    <button className="btn btn-danger d-flex align-items-center gap-2">
+                    <button className="btn btn-danger d-flex align-items-center gap-2" onClick={() => handleDelete(selectedLecturer.user_id)}>
                       <Trash2 size={18} /> Xóa
                     </button>
                   </div>
@@ -177,17 +244,24 @@ export default function AdminLecturers() {
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '12px' }}>
               <div className="modal-header border-bottom-0 pb-0">
-                <h5 className="modal-title fw-bold">Cập nhật Giảng viên</h5>
+                <h5 className="modal-title fw-bold">{editingLecturer ? 'Cập nhật Giảng viên' : 'Thêm Giảng viên mới'}</h5>
                 <button type="button" className="btn-close" onClick={closeEditModal}></button>
               </div>
               <div className="modal-body">
                 <div className="mb-3">
                   <label className="form-label fw-medium">Họ và tên</label>
-                  <input type="text" className="form-control" defaultValue={editingLecturer?.name} />
+                  <input type="text" className="form-control" value={editName} onChange={(e) => setEditName(e.target.value)} />
                 </div>
+                {!editingLecturer && (
+                  <div className="mb-3">
+                    <label className="form-label fw-medium">Email (Dùng để đăng nhập)</label>
+                    <input type="email" className="form-control" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} placeholder="gv@hcmut.edu.vn" />
+                    <div className="form-text">Mật khẩu mặc định sẽ là 123456</div>
+                  </div>
+                )}
                 <div className="mb-3">
                   <label className="form-label fw-medium">Khoa / Phòng ban</label>
-                  <input type="text" className="form-control" defaultValue={editingLecturer?.khoa} />
+                  <input type="text" className="form-control" value={editKhoa} onChange={(e) => setEditKhoa(e.target.value)} />
                 </div>
                 <div className="mb-4">
                   <label className="form-label fw-medium text-primary">Mã thẻ RFID</label>
@@ -215,7 +289,7 @@ export default function AdminLecturers() {
               </div>
               <div className="modal-footer border-top-0 pt-0">
                 <button type="button" className="btn btn-light" onClick={closeEditModal}>Hủy bỏ</button>
-                <button type="button" className="btn btn-primary px-4" onClick={closeEditModal}>OK</button>
+                <button type="button" className="btn btn-primary px-4" onClick={handleSave}>OK</button>
               </div>
             </div>
           </div>

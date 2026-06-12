@@ -46,6 +46,8 @@ export default function MainLayout({ role = 'admin' }) {
   };
 
   const homePath = role === 'admin' ? '/admin' : '/lecturer';
+  const userName = localStorage.getItem('userName') || (role === 'admin' ? 'Admin: Phan T' : 'GV: Trần Thị A');
+  const userInitials = userName.trim().split(' ').pop().charAt(0).toUpperCase();
 
   return (
     <div className="main-layout min-vh-100 d-flex flex-column w-100">
@@ -124,7 +126,7 @@ export default function MainLayout({ role = 'admin' }) {
               onClick={() => setShowDropdown(!showDropdown)}
             >
               <span className="topbar-user-name" style={{ color: 'white', fontWeight: 500 }}>
-                {role === 'admin' ? 'Admin: Phan T' : 'GV: Trần Thị A'}
+                {userName}
               </span>
               <div 
                 className="topbar-avatar" 
@@ -135,7 +137,7 @@ export default function MainLayout({ role = 'admin' }) {
                   display: 'flex', justifyContent: 'center', alignItems: 'center', fontWeight: 'bold' 
                 }}
               >
-                {role === 'admin' ? 'T' : 'A'}
+                {userInitials}
               </div>
             </div>
             

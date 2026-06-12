@@ -19,12 +19,13 @@ class StudentModel {
         s.student_id as id,
         s.student_code as code,
         s.name,
-        c.class_name as class,
-        rc.rfid_uid
+        GROUP_CONCAT(c.class_name SEPARATOR ', ') as class,
+        MAX(rc.rfid_uid) as rfid_uid
       FROM students s
       LEFT JOIN class_students cs ON s.student_id = cs.student_id
       LEFT JOIN classes c ON cs.class_id = c.class_id
       LEFT JOIN rfid_cards rc ON s.student_id = rc.student_id
+      GROUP BY s.student_id, s.student_code, s.name
     `;
     const [rows] = await db.execute(query);
     return rows;
@@ -54,6 +55,14 @@ class StudentModel {
       DELETE FROM students
       WHERE student_id = ?
     `, [studentId]);
+  }
+  // Thêm sinh viên mới
+  static async createStudent(name, studentCode) {
+    const [result] = await db.execute(`
+      INSERT INTO students (name, student_code)
+      VALUES (?, ?)
+    `, [name, studentCode]);
+    return result.insertId;
   }
 }
 

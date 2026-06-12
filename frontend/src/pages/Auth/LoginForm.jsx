@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { login } from '../../services/api';
 import './Auth.css';
 
 export default function LoginForm() {
@@ -10,24 +11,38 @@ export default function LoginForm() {
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    if (email === 'gv@hcmut.edu.vn' && password === '123456') {
-      if (selectedRole && selectedRole !== 'lecturer') {
-        alert('Tài khoản không có quyền truy cập với vai trò này');
-        return;
+    try {
+      const data = await login(email, password);
+      if (data.success) {
+        const { role, userId, name } = data.data;
+
+        // Check if role matches what they selected
+        if (selectedRole && role !== selectedRole) {
+          alert('Tài khoản không có quyền truy cập với vai trò này');
+          return;
+        }
+
+        // Store role and userId in localStorage
+        localStorage.setItem('role', role);
+        localStorage.setItem('userId', userId); // Useful for lecturer profile
+        localStorage.setItem('userName', name); // Store user's name
+
+        // Route based on role
+        if (role === 'admin') {
+          navigate('/admin');
+        } else if (role === 'lecturer') {
+          navigate('/lecturer');
+        } else {
+          alert('Vai trò không hợp lệ');
+        }
+      } else {
+        alert(data.message || 'Sai email hoặc mật khẩu!');
       }
-      localStorage.setItem('role', 'lecturer');
-      navigate('/lecturer');
-    } else if (email === 'admin@hcmut.edu.vn' && password === '123456') {
-      if (selectedRole && selectedRole !== 'admin') {
-        alert('Tài khoản không có quyền truy cập với vai trò này');
-        return;
-      }
-      localStorage.setItem('role', 'admin');
-      navigate('/admin');
-    } else {
-      alert('Sai email hoặc mật khẩu!');
+    } catch (error) {
+      console.error('Login error:', error);
+      alert('Lỗi kết nối đến máy chủ');
     }
   };
 

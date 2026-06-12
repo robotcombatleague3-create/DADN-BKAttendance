@@ -13,8 +13,8 @@ export default function AttendanceList() {
   const [filterStatus, setFilterStatus] = useState('ALL');
 
   useEffect(() => {
-    // Gọi API với lecturerId=1 (Hardcode tạm thời)
-    fetch('http://localhost:3000/api/classes/lecturer?lecturerId=1')
+    const userId = localStorage.getItem('userId');
+    fetch(`http://localhost:3000/api/classes/lecturer?lecturerId=${userId}`)
       .then(res => res.json())
       .then(data => {
         if (data.success) {
@@ -32,8 +32,8 @@ export default function AttendanceList() {
   }, []);
 
   const filteredData = classes?.filter(item => {
-    const matchSearch = item.class_name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                        item.class_code.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchSearch = (item?.class_name || '').toLowerCase().includes((searchTerm || '').toLowerCase()) || 
+                        (item?.class_code || '').toLowerCase().includes((searchTerm || '').toLowerCase());
     const matchFilter = filterStatus === 'ALL' || item.status === filterStatus;
     return matchSearch && matchFilter;
   });

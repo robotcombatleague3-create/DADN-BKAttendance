@@ -29,8 +29,8 @@ export default function AdminAttendanceDetail() {
   }, [classId]);
 
   const filteredStudents = students.filter(s => {
-    const term = searchTerm.toLowerCase();
-    return s.mssv?.toLowerCase().includes(term) || s.name?.toLowerCase().includes(term);
+    const term = (searchTerm || '').toLowerCase();
+    return (s?.mssv || '').toLowerCase().includes(term) || (s?.name || '').toLowerCase().includes(term);
   });
 
   const total = students.length;
