@@ -18,10 +18,9 @@ export default function AttendanceList() {
       .then(res => res.json())
       .then(data => {
         if (data.success) {
-          // Thêm một status mặc định để demo (online/offline)
           const formatted = data.data.map(c => ({
             ...c,
-            status: 'online', 
+            status: c.status || 'offline', 
             students: 0 // Tạm thời để 0 vì chưa có API tổng số sinh viên tại đây
           }));
           setClasses(formatted);
