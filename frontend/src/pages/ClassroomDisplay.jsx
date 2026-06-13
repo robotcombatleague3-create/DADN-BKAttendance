@@ -164,9 +164,7 @@ const ClassroomDisplay = () => {
             <div style={styles.header}>
                 <div style={styles.logo}>
                     {/* Placeholder for BK Logo */}
-                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#0c588e" strokeWidth="2">
-                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-                    </svg>
+                    <img src="/assets/logo.png" alt="BK Logo" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '4px' }} />
                 </div>
                 H6-301
             </div>
