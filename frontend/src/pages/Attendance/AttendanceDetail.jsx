@@ -113,8 +113,8 @@ export default function AttendanceDetail() {
   }, [classId]);
 
   const filteredHistoryData = historyData.filter(s => {
-    const term = searchTerm.toLowerCase();
-    return s.student_code?.toLowerCase().includes(term) || s.student_name?.toLowerCase().includes(term);
+    const term = (searchTerm || '').toLowerCase();
+    return (s?.student_code || '').toLowerCase().includes(term) || (s?.student_name || '').toLowerCase().includes(term);
   });
 
   return (

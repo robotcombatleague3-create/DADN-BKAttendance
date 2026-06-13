@@ -66,7 +66,8 @@ exports.getClasses = async (req, res) => {
         c.class_id,
         c.class_name
       FROM classes c
-      WHERE c.lecturer_id = ?
+      JOIN lecturers l ON c.lecturer_id = l.lecturer_id
+      WHERE l.user_id = ?
     `;
     
     const [rows] = await db.execute(query, [lecturerId]);

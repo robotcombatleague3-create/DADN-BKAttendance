@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, User, Pencil, Trash2, X, ChevronLeft, ScanLine } from 'lucide-react';
-import { getStudents, updateStudent, deleteStudent } from '../../services/api';
+import { getStudents, updateStudent, deleteStudent, createStudent } from '../../services/api';
 
 export default function AdminStudents() {
   const [students, setStudents] = useState([]);
@@ -44,25 +44,41 @@ export default function AdminStudents() {
     setIsScanning(false);
   };
 
+  const openAddModal = () => {
+    setEditingStudent(null);
+    setEditName("");
+    setEditCode("");
+    setRfidValue("");
+    setShowEditModal(true);
+  };
+
   const handleSave = async () => {
     try {
-      await updateStudent(editingStudent.id, {
-        name: editName,
-        code: editCode,
-        rfidUid: rfidValue
-      });
+      if (editingStudent) {
+        await updateStudent(editingStudent.id, {
+          name: editName,
+          code: editCode,
+          rfidUid: rfidValue
+        });
+      } else {
+        await createStudent({
+          name: editName,
+          code: editCode,
+          rfidUid: rfidValue
+        });
+      }
       // reload
       const data = await getStudents();
       setStudents(data);
       
       // Update selectedStudent view if it is the one being edited
-      if (selectedStudent && selectedStudent.id === editingStudent.id) {
+      if (selectedStudent && editingStudent && selectedStudent.id === editingStudent.id) {
          setSelectedStudent({...selectedStudent, name: editName, code: editCode, rfid_uid: rfidValue});
       }
       closeEditModal();
     } catch (err) {
       console.error(err);
-      alert("Lỗi cập nhật sinh viên");
+      alert(editingStudent ? "Lỗi cập nhật sinh viên" : "Lỗi thêm sinh viên");
     }
   };
 
@@ -92,8 +108,8 @@ export default function AdminStudents() {
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredStudents = students?.filter(student => 
-    student.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    (student.code && student.code.toString().toLowerCase().includes(searchTerm.toLowerCase()))
+    (student?.name || '').toLowerCase().includes((searchTerm || '').toLowerCase()) || 
+    (student?.code || '').toString().toLowerCase().includes((searchTerm || '').toLowerCase())
   );
 
   const handleSyncHardware = async () => {
@@ -133,7 +149,7 @@ export default function AdminStudents() {
               <button className="btn btn-outline-primary fw-medium d-flex align-items-center gap-2" onClick={handleSyncHardware}>
                 Đồng bộ phần cứng
               </button>
-              <button className="btn btn-primary fw-medium d-flex align-items-center gap-2 text-white">
+              <button className="btn btn-primary fw-medium d-flex align-items-center gap-2 text-white" onClick={openAddModal}>
                 <User size={18} /> Thêm sinh viên
               </button>
             </div>
@@ -231,7 +247,7 @@ export default function AdminStudents() {
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '12px' }}>
               <div className="modal-header border-bottom-0 pb-0">
-                <h5 className="modal-title fw-bold">Cập nhật sinh viên</h5>
+                <h5 className="modal-title fw-bold">{editingStudent ? 'Cập nhật sinh viên' : 'Thêm sinh viên mới'}</h5>
                 <button type="button" className="btn-close" onClick={closeEditModal}></button>
               </div>
               <div className="modal-body">

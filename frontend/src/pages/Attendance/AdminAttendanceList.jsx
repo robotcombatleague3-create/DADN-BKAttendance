@@ -30,8 +30,8 @@ export default function AdminAttendanceList() {
   const [filterStatus, setFilterStatus] = useState('ALL');
 
   const filteredData = classes?.filter(item => {
-    const matchSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                        (item.lecturer && item.lecturer.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchSearch = (item?.name || '').toLowerCase().includes((searchTerm || '').toLowerCase()) || 
+                        (item?.lecturer || '').toLowerCase().includes((searchTerm || '').toLowerCase());
     const matchFilter = filterStatus === 'ALL' || item.status === filterStatus;
     return matchSearch && matchFilter;
   });

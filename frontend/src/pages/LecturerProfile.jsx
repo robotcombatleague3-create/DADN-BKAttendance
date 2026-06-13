@@ -3,7 +3,7 @@ import { User, Pencil, X } from 'lucide-react';
 import { getLecturerProfile, getLecturerHistory, updateLecturerProfile } from '../services/api';
 import './LecturerProfile.css';
 
-const USER_ID = 2; // Hardcode for demo purposes, replace with actual auth context later
+const USER_ID = localStorage.getItem('userId');
 
 export default function LecturerProfile() {
   const [profile, setProfile] = useState(null);

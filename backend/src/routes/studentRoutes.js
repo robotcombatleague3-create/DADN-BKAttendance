@@ -5,6 +5,9 @@ const studentController = require('../controllers/studentController');
 // GET /api/students
 router.get('/', studentController.getAllStudents);
 
+// POST /api/students
+router.post('/', studentController.createStudent);
+
 // POST /api/students/sync-hardware
 router.post('/sync-hardware', studentController.syncHardware);
 
