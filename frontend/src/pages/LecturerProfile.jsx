@@ -3,8 +3,6 @@ import { User, Pencil, X } from 'lucide-react';
 import { getLecturerProfile, getLecturerHistory, updateLecturerProfile } from '../services/api';
 import './LecturerProfile.css';
 
-const USER_ID = localStorage.getItem('userId');
-
 export default function LecturerProfile() {
   const [profile, setProfile] = useState(null);
   const [history, setHistory] = useState([]);
@@ -13,12 +11,18 @@ export default function LecturerProfile() {
   const [editForm, setEditForm] = useState({ name: '', department: '', specialization: '' });
   const [saving, setSaving] = useState(false);
 
+  const userId = localStorage.getItem('userId');
+
   const fetchProfileData = async () => {
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
       const [profileData, historyData] = await Promise.all([
-        getLecturerProfile(USER_ID),
-        getLecturerHistory(USER_ID)
+        getLecturerProfile(userId),
+        getLecturerHistory(userId)
       ]);
       setProfile(profileData);
       setHistory(historyData);
@@ -47,7 +51,7 @@ export default function LecturerProfile() {
   const handleSave = async () => {
     try {
       setSaving(true);
-      await updateLecturerProfile(USER_ID, editForm);
+      await updateLecturerProfile(userId, editForm);
       alert('Cập nhật hồ sơ thành công!');
       setShowModal(false);
       fetchProfileData(); // Reload data
