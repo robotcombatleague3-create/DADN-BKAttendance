@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, User, Pencil, Trash2, ChevronLeft, ScanLine } from 'lucide-react';
 import { getStudents, createStudent, updateStudent, deleteStudent } from '../../services/api';
+import Pagination from '../../components/Pagination';
 
 export default function AdminStudents() {
   const [students, setStudents] = useState([]);
@@ -218,27 +219,11 @@ export default function AdminStudents() {
             </div>
             
             {/* Pagination Controls */}
-            {totalPages > 1 && (
-              <div className="d-flex justify-content-center align-items-center p-3 border-top">
-                <button 
-                  className="btn btn-outline-secondary btn-sm me-2"
-                  disabled={currentPage === 1}
-                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                >
-                  Trước
-                </button>
-                <span className="text-secondary small mx-2">
-                  Trang {currentPage} / {totalPages}
-                </span>
-                <button 
-                  className="btn btn-outline-secondary btn-sm ms-2"
-                  disabled={currentPage === totalPages}
-                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                >
-                  Sau
-                </button>
-              </div>
-            )}
+            <Pagination 
+              currentPage={currentPage} 
+              totalPages={totalPages} 
+              onPageChange={setCurrentPage} 
+            />
           </div>
         </>
       ) : (
