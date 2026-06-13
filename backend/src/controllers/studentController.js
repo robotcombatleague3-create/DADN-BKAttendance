@@ -50,12 +50,20 @@ exports.syncHardware = async (req, res) => {
       GROUP BY s.student_id, r.rfid_uid, s.name
     `);
 
+    // Hàm bỏ dấu tiếng Việt
+    const removeAccents = (str) => {
+      if (!str) return str;
+      return str.normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/đ/g, 'd').replace(/Đ/g, 'D');
+    };
+
     // Tạo mảng gọn nhẹ để gửi
     const payloadArray = rows.map(row => ({
       u: row.rfid_uid,
       i: row.student_id,
-      n: row.name,
-      c: row.class_name || "Chưa có lớp",
+      n: removeAccents(row.name),
+      c: removeAccents(row.class_name) || "Chua co lop",
       st: row.start_time || "00:00:00",
       et: row.end_time || "00:00:00",
       lt: row.late_threshold || "00:00:00"
