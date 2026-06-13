@@ -22,6 +22,33 @@ export default function AdminAttendanceStats() {
     loadStats();
   }, []);
 
+  const handleExportStats = () => {
+    if (!data || data.length === 0) {
+      alert('Không có dữ liệu để xuất');
+      return;
+    }
+
+    const headers = ['Tên lớp', 'Sĩ số', 'Có mặt', 'Đi trễ', 'Vắng'];
+    
+    const rows = data.map(c => {
+      const total = (c.present || 0) + (c.late || 0) + (c.absent || 0);
+      return `"${c.name}","${total}","${c.present || 0}","${c.late || 0}","${c.absent || 0}"`;
+    });
+
+    const csvContent = headers.join(',') + '\n' + rows.join('\n');
+    const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement('a');
+    link.href = url;
+    const dateStr = new Date().toLocaleDateString('vi-VN').replace(/\//g, '-');
+    link.download = `ThongKe_ToanTruong_Ngay_${dateStr}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="content-container w-full h-full flex flex-col flex-1">
       <div className="stats-card flex-1 flex flex-col w-full h-full">
@@ -40,7 +67,7 @@ export default function AdminAttendanceStats() {
               <div className="legend-color absent" style={{ backgroundColor: '#ef4444' }}></div>
               <span>Vắng</span>
             </div>
-            <button className="board-btn" style={{ marginLeft: '10px' }}>
+            <button className="board-btn" style={{ marginLeft: '10px' }} onClick={handleExportStats}>
               <Download size={18} /> Xuất <ChevronDown size={14}/>
             </button>
           </div>
@@ -52,7 +79,7 @@ export default function AdminAttendanceStats() {
           ) : data.length === 0 ? (
              <div className="text-center p-5 text-secondary">Chưa có dữ liệu thống kê.</div>
           ) : (
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height={400}>
               <BarChart
                 data={data}
                 margin={{ top: 20, right: 30, left: 20, bottom: 5 }}

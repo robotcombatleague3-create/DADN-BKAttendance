@@ -38,6 +38,34 @@ export default function AdminAttendanceDetail() {
   const late = students.filter(s => s.status === 'late').length;
   const absent = students.filter(s => s.status === 'absent').length;
 
+  const handleExportAttendance = () => {
+    if (!filteredStudents || filteredStudents.length === 0) {
+      alert('Không có dữ liệu để xuất');
+      return;
+    }
+
+    const headers = ['MSSV', 'Họ và tên', 'Thời gian điểm danh', 'Trạng thái'];
+    
+    const rows = filteredStudents.map(s => {
+      let statusText = s.status === 'present' ? 'Có mặt' : (s.status === 'absent' ? 'Vắng' : 'Đi trễ');
+      let timeText = s.time || '-';
+      return `"${s.mssv}","${s.name}","${timeText}","${statusText}"`;
+    });
+
+    const csvContent = headers.join(',') + '\n' + rows.join('\n');
+    const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement('a');
+    link.href = url;
+    const dateStr = new Date().toLocaleDateString('vi-VN').replace(/\//g, '-');
+    link.download = `DiemDanh_Lop_${classId || 3}_Ngay_${dateStr}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="content-container w-full h-full flex flex-col flex-1">
       <div className="detail-grid flex-1 w-full h-full">
@@ -78,7 +106,7 @@ export default function AdminAttendanceDetail() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
-              <button className="board-btn">
+              <button className="board-btn" onClick={handleExportAttendance}>
                 <Download size={18} /> Xuất <ChevronDown size={14} />
               </button>
               <button className="board-btn primary" onClick={() => navigate(`${basePath}/attendance/${classId || 3}/stats`)}>

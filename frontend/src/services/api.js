@@ -24,7 +24,7 @@ export const getClassAttendance = async (classId) => {
 };
 
 export const getOverallStats = async () => {
-  const res = await fetch(`${API_URL}/attendance/stats`);
+  const res = await fetch(`${API_URL}/stats`);
   const data = await res.json();
   return data.data || [];
 };
