@@ -11,7 +11,6 @@
 #include "user_db.h"
 #include "servo_manager.h"
 #include "network_manager.h"
-#include <TensorFlowLite_ESP32.h>
 
 void rfidTask(void *pvParameters);
 

@@ -9,6 +9,10 @@ struct User {
   uint32_t uidHash;
   int idIndex;
   char name[32];
+  char className[64]; 
+  int startH, startM; 
+  int endH, endM;
+  int lateH, lateM;
 };
 
 extern User database[MAX_USERS];

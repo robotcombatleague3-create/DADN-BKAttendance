@@ -34,28 +34,17 @@ void servoTask(void *pvParameters) {
     setup_servo();
     
     while (1) {
-        xSemaphoreTake(settingsMutex, portMAX_DELAY);
-        bool fireDetected = shared_fireAlert;
-        xSemaphoreGive(settingsMutex);
-
-        if (fireDetected) {
-            if (!isGateOpen) {
-                gateServo.write(GATE_OPEN_ANGLE);
-                isGateOpen = true;
-            }
-        } else {
-            // KIỂM TRA ĐÓNG CỬA
-            if (isGateOpen) {
-                unsigned long timeElapsed = millis() - gateTimer;
-                
-                // NẾU HẾT GIỜ MỞ CỬA
-                if (timeElapsed >= GATE_OPEN_DURATION) {
-                    gateServo.write(GATE_CLOSED_ANGLE);
-                    isGateOpen = false;
-                }
+        // KIỂM TRA VÀ ĐÓNG CỬA TỰ ĐỘNG
+        if (isGateOpen) {
+            unsigned long timeElapsed = millis() - gateTimer;
+            
+            // Nếu đã qua khoảng thời gian mở cửa (GATE_OPEN_DURATION)
+            if (timeElapsed >= GATE_OPEN_DURATION) {
+                isGateOpen = false;
             }
         }
         
+        // Ghi góc chốt (Duy trì trạng thái cửa)
         if (isGateOpen) {
             gateServo.write(GATE_OPEN_ANGLE);
         } else {
