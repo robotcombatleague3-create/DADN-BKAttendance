@@ -36,6 +36,16 @@ export default function AdminAttendanceList() {
     return matchSearch && matchFilter;
   });
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterStatus]);
+
+  const totalPages = Math.ceil((filteredData?.length || 0) / itemsPerPage);
+  const currentData = filteredData?.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
   return (
     <div className="content-container w-full h-full flex flex-col flex-1">
       <div className="list-card flex-1 flex flex-col w-full h-full">
@@ -70,10 +80,10 @@ export default function AdminAttendanceList() {
         <div className="list-rows flex-1 w-full h-full" style={{ overflowY: 'auto' }}>
           {loading ? (
             <div className="text-center p-5 text-secondary">Đang tải dữ liệu từ server...</div>
-          ) : !filteredData || filteredData.length === 0 ? (
+          ) : !currentData || currentData.length === 0 ? (
             <div className="text-center p-5 text-secondary">Không có dữ liệu.</div>
           ) : (
-            filteredData?.map((item) => (
+            currentData?.map((item) => (
               <div 
                 key={item.id} 
                 className="list-row w-full" 
@@ -103,6 +113,29 @@ export default function AdminAttendanceList() {
             ))
           )}
         </div>
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="d-flex justify-content-center align-items-center p-3 border-top">
+            <button 
+              className="btn btn-outline-secondary btn-sm me-2"
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+            >
+              Trước
+            </button>
+            <span className="text-secondary small mx-2">
+              Trang {currentPage} / {totalPages}
+            </span>
+            <button 
+              className="btn btn-outline-secondary btn-sm ms-2"
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+            >
+              Sau
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

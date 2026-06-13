@@ -126,6 +126,17 @@ export default function AdminStudents() {
     (student.code && student.code.toString().toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  // Reset to first page when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
+  const totalPages = Math.ceil((filteredStudents?.length || 0) / itemsPerPage);
+  const currentData = filteredStudents?.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
   const handleSyncHardware = async () => {
     if (window.confirm('Bạn có chắc muốn đẩy dữ liệu xuống phần cứng?')) {
       try {
@@ -172,10 +183,10 @@ export default function AdminStudents() {
             <div className="list-group list-group-flush rounded-3" style={{ maxHeight: '65vh', overflowY: 'auto' }}>
               {loading ? (
                 <div className="text-center p-5 text-secondary">Đang tải dữ liệu từ server...</div>
-              ) : !filteredStudents || filteredStudents.length === 0 ? (
+              ) : !currentData || currentData.length === 0 ? (
                 <div className="text-center p-5 text-secondary">Không có dữ liệu.</div>
               ) : (
-                filteredStudents.map(student => (
+                currentData.map(student => (
                   <div
                     key={student.id}
                     className="list-group-item list-group-item-action d-flex align-items-center justify-content-between p-3"
@@ -205,6 +216,29 @@ export default function AdminStudents() {
                 ))
               )}
             </div>
+            
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="d-flex justify-content-center align-items-center p-3 border-top">
+                <button 
+                  className="btn btn-outline-secondary btn-sm me-2"
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                >
+                  Trước
+                </button>
+                <span className="text-secondary small mx-2">
+                  Trang {currentPage} / {totalPages}
+                </span>
+                <button 
+                  className="btn btn-outline-secondary btn-sm ms-2"
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                >
+                  Sau
+                </button>
+              </div>
+            )}
           </div>
         </>
       ) : (

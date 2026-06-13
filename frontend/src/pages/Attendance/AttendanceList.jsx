@@ -37,6 +37,16 @@ export default function AttendanceList() {
     return matchSearch && matchFilter;
   });
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterStatus]);
+
+  const totalPages = Math.ceil((filteredData?.length || 0) / itemsPerPage);
+  const currentData = filteredData?.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
   return (
     <div className="content-container flex-grow-1 w-100">
       <div className="list-card container mt-4">
@@ -77,10 +87,10 @@ export default function AttendanceList() {
                 <span className="visually-hidden">Đang tải...</span>
               </div>
             </div>
-          ) : !filteredData || filteredData.length === 0 ? (
+          ) : !currentData || currentData.length === 0 ? (
             <div className="text-center p-5 text-secondary">Không tìm thấy lớp học nào.</div>
           ) : (
-            filteredData.map((item) => (
+            currentData.map((item) => (
               <div 
                 key={item.class_id} 
                 className="list-row d-flex justify-content-between align-items-center p-3 mb-3 border rounded shadow-sm bg-white" 
@@ -117,6 +127,29 @@ export default function AttendanceList() {
             ))
           )}
         </div>
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="d-flex justify-content-center align-items-center p-3 mt-3">
+            <button 
+              className="btn btn-outline-secondary btn-sm me-2"
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+            >
+              Trước
+            </button>
+            <span className="text-secondary small mx-2">
+              Trang {currentPage} / {totalPages}
+            </span>
+            <button 
+              className="btn btn-outline-secondary btn-sm ms-2"
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+            >
+              Sau
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
