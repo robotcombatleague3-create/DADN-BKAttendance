@@ -1,23 +1,25 @@
 const express = require('express');
 const router = express.Router();
 const studentController = require('../controllers/studentController');
+const { verifyToken } = require('../middlewares/authMiddleware');
+
 
 // GET /api/students
-router.get('/', studentController.getAllStudents);
+router.get('/', verifyToken, studentController.getAllStudents);
 
 // POST /api/students
-router.post('/', studentController.createStudent);
+router.post('/', verifyToken, studentController.createStudent);
 
 // POST /api/students/sync-hardware
-router.post('/sync-hardware', studentController.syncHardware);
+router.post('/sync-hardware', verifyToken, studentController.syncHardware);
 
 // PUT /api/students/:id/rfid
-router.put('/:id/rfid', studentController.assignRfid);
+router.put('/:id/rfid', verifyToken, studentController.assignRfid);
 
 // PUT /api/students/:id
-router.put('/:id', studentController.updateStudent);
+router.put('/:id', verifyToken, studentController.updateStudent);
 
 // DELETE /api/students/:id
-router.delete('/:id', studentController.deleteStudent);
+router.delete('/:id', verifyToken, studentController.deleteStudent);
 
 module.exports = router;

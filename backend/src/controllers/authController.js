@@ -1,4 +1,6 @@
 const db = require('../config/db');
+const jwt = require('jsonwebtoken');
+
 
 exports.login = async (req, res) => {
   const { email, password } = req.body;
@@ -17,6 +19,12 @@ exports.login = async (req, res) => {
       return res.status(401).json({ success: false, message: 'Sai email hoặc mật khẩu' });
     }
 
+    const token = jwt.sign(
+      { userId: user.user_id, role: user.role, name: user.name, email: user.email },
+      process.env.JWT_SECRET || 'your_default_secret_key',
+      { expiresIn: '1d' }
+    );
+
     res.json({
       success: true,
       message: 'Đăng nhập thành công',
@@ -24,7 +32,8 @@ exports.login = async (req, res) => {
         userId: user.user_id,
         name: user.name,
         email: user.email,
-        role: user.role
+        role: user.role,
+        token: token
       }
     });
   } catch (error) {

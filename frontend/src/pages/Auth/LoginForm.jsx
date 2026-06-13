@@ -16,7 +16,7 @@ export default function LoginForm() {
     try {
       const data = await login(email, password);
       if (data.success) {
-        const { role, userId, name } = data.data;
+        const { role, userId, name, token } = data.data;
 
         // Check if role matches what they selected
         if (selectedRole && role !== selectedRole) {
@@ -28,6 +28,7 @@ export default function LoginForm() {
         localStorage.setItem('role', role);
         localStorage.setItem('userId', userId); // Useful for lecturer profile
         localStorage.setItem('userName', name); // Store user's name
+        if (token) localStorage.setItem('token', token); // Store JWT token
 
         // Route based on role
         if (role === 'admin') {

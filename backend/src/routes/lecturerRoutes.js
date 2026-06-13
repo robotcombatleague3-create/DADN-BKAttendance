@@ -1,26 +1,28 @@
 const express = require('express');
 const router = express.Router();
 const lecturerController = require('../controllers/lecturerController');
+const { verifyToken } = require('../middlewares/authMiddleware');
+
 
 // GET /api/lecturers/profile/:userId
-router.get('/profile/:userId', lecturerController.getProfile);
+router.get('/profile/:userId', verifyToken, lecturerController.getProfile);
 
 // PUT /api/lecturers/profile/:userId
-router.put('/profile/:userId', lecturerController.updateProfile);
+router.put('/profile/:userId', verifyToken, lecturerController.updateProfile);
 
 // GET /api/lecturers/history/:userId
-router.get('/history/:userId', lecturerController.getTeachingHistory);
+router.get('/history/:userId', verifyToken, lecturerController.getTeachingHistory);
 
 // GET /api/lecturers
-router.get('/', lecturerController.getAllLecturers);
+router.get('/', verifyToken, lecturerController.getAllLecturers);
 
 // POST /api/lecturers
-router.post('/', lecturerController.createLecturer);
+router.post('/', verifyToken, lecturerController.createLecturer);
 
 // PUT /api/lecturers/user/:userId
-router.put('/user/:userId', lecturerController.updateLecturer);
+router.put('/user/:userId', verifyToken, lecturerController.updateLecturer);
 
 // DELETE /api/lecturers/:lecturerId
-router.delete('/:lecturerId', lecturerController.deleteLecturer);
+router.delete('/:lecturerId', verifyToken, lecturerController.deleteLecturer);
 
 module.exports = router;

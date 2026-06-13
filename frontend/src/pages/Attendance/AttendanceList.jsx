@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Pagination from '../../components/Pagination';
+import { getLecturerClasses } from '../../services/api';
 import './Attendance.css';
 
 export default function AttendanceList() {
@@ -15,8 +16,7 @@ export default function AttendanceList() {
 
   useEffect(() => {
     const userId = localStorage.getItem('userId');
-    fetch(`http://localhost:3000/api/classes/lecturer?lecturerId=${userId}`)
-      .then(res => res.json())
+    getLecturerClasses(userId)
       .then(data => {
         if (data.success) {
           const formatted = data.data.map(c => ({

@@ -1,7 +1,18 @@
 const API_URL = 'http://localhost:3000/api';
 
+const apiFetch = async (url, options = {}) => {
+  const token = localStorage.getItem('token');
+  const headers = {
+    ...options.headers,
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return fetch(url, { ...options, headers });
+};
+
 export const login = async (email, password) => {
-  const res = await fetch(`${API_URL}/auth/login`, {
+  const res = await apiFetch(`${API_URL}/auth/login`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -12,43 +23,49 @@ export const login = async (email, password) => {
 };
 
 export const getHistory = async () => {
-  const res = await fetch(`${API_URL}/attendance/history`);
+  const res = await apiFetch(`${API_URL}/attendance/history`);
   const data = await res.json();
   return data.data || [];
 };
 
 export const getClassAttendance = async (classId) => {
-  const res = await fetch(`${API_URL}/attendance/class/${classId}`);
+  const res = await apiFetch(`${API_URL}/attendance/class/${classId}`);
   const data = await res.json();
   return data.data || [];
 };
 
 export const getOverallStats = async () => {
-  const res = await fetch(`${API_URL}/stats`);
+  const res = await apiFetch(`${API_URL}/stats`);
   const data = await res.json();
   return data.data || [];
 };
 
 export const getStudents = async () => {
-  const res = await fetch(`${API_URL}/students`);
+  const res = await apiFetch(`${API_URL}/students`);
   const data = await res.json();
   return data.data || [];
 };
 
 export const getLecturers = async () => {
-  const res = await fetch(`${API_URL}/lecturers`);
+  const res = await apiFetch(`${API_URL}/lecturers`);
   const data = await res.json();
   return data.data || [];
 };
 
 export const getClasses = async () => {
-  const res = await fetch(`${API_URL}/classes`);
+  const res = await apiFetch(`${API_URL}/classes`);
   const data = await res.json();
   return data.data || [];
 };
 
+export const getLecturerClasses = async (userId) => {
+  const res = await apiFetch(`${API_URL}/classes/lecturer?lecturerId=${userId}`);
+  return res.json();
+};
+
+
 export const assignRfid = async (studentId, rfidUid) => {
-  const res = await fetch(`${API_URL}/students/${studentId}/rfid`, {
+  const res = await apiFetch(`${API_URL}/students/${studentId}/rfid`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json'
@@ -59,7 +76,7 @@ export const assignRfid = async (studentId, rfidUid) => {
 };
 
 export const createStudent = async (studentData) => {
-  const res = await fetch(`${API_URL}/students`, {
+  const res = await apiFetch(`${API_URL}/students`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(studentData)
@@ -68,7 +85,7 @@ export const createStudent = async (studentData) => {
 };
 
 export const updateStudent = async (studentId, studentData) => {
-  const res = await fetch(`${API_URL}/students/${studentId}`, {
+  const res = await apiFetch(`${API_URL}/students/${studentId}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json'
@@ -79,14 +96,14 @@ export const updateStudent = async (studentId, studentData) => {
 };
 
 export const deleteStudent = async (studentId) => {
-  const res = await fetch(`${API_URL}/students/${studentId}`, {
+  const res = await apiFetch(`${API_URL}/students/${studentId}`, {
     method: 'DELETE'
   });
   return res.json();
 };
 
 export const createLecturer = async (lecturerData) => {
-  const res = await fetch(`${API_URL}/lecturers`, {
+  const res = await apiFetch(`${API_URL}/lecturers`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(lecturerData)
@@ -95,7 +112,7 @@ export const createLecturer = async (lecturerData) => {
 };
 
 export const updateLecturer = async (userId, lecturerData) => {
-  const res = await fetch(`${API_URL}/lecturers/user/${userId}`, {
+  const res = await apiFetch(`${API_URL}/lecturers/user/${userId}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(lecturerData)
@@ -104,7 +121,7 @@ export const updateLecturer = async (userId, lecturerData) => {
 };
 
 export const deleteLecturer = async (lecturerId) => {
-  const res = await fetch(`${API_URL}/lecturers/${lecturerId}`, {
+  const res = await apiFetch(`${API_URL}/lecturers/${lecturerId}`, {
     method: 'DELETE'
   });
   return res.json();
@@ -128,19 +145,19 @@ export const getStudentAttendanceHistory = async (studentId, classId = '') => {
   const url = classId 
     ? `${API_URL}/attendance/student/${studentId}?classId=${classId}` 
     : `${API_URL}/attendance/student/${studentId}`;
-  const res = await fetch(url);
+  const res = await apiFetch(url);
   const data = await res.json();
   return data.data || [];
 };
 
 export const getLecturerProfile = async (userId) => {
-  const res = await fetch(`${API_URL}/lecturers/profile/${userId}`);
+  const res = await apiFetch(`${API_URL}/lecturers/profile/${userId}`);
   const data = await res.json();
   return data.data || null;
 };
 
 export const updateLecturerProfile = async (userId, profileData) => {
-  const res = await fetch(`${API_URL}/lecturers/profile/${userId}`, {
+  const res = await apiFetch(`${API_URL}/lecturers/profile/${userId}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json'
@@ -151,7 +168,7 @@ export const updateLecturerProfile = async (userId, profileData) => {
 };
 
 export const getLecturerHistory = async (userId) => {
-  const res = await fetch(`${API_URL}/lecturers/history/${userId}`);
+  const res = await apiFetch(`${API_URL}/lecturers/history/${userId}`);
   const data = await res.json();
   return data.data || [];
 };

@@ -42,6 +42,9 @@ export default function MainLayout({ role = 'admin' }) {
 
   const handleLogout = () => {
     localStorage.removeItem('role');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('userName');
+    localStorage.removeItem('token');
     navigate('/');
   };
 
