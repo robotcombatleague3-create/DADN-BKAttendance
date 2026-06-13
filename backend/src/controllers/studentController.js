@@ -38,7 +38,9 @@ exports.syncHardware = async (req, res) => {
         s.student_id, 
         s.name,
         MAX(c.class_name) as class_name,
-        MAX(sess.start_time) as start_time
+        MAX(sess.start_time) as start_time,
+        MAX(sess.end_time) as end_time,
+        MAX(sess.late_threshold) as late_threshold
       FROM rfid_cards r 
       JOIN students s ON r.student_id = s.student_id
       LEFT JOIN class_students cs ON s.student_id = cs.student_id
@@ -54,7 +56,9 @@ exports.syncHardware = async (req, res) => {
       i: row.student_id,
       n: row.name,
       c: row.class_name || "Chưa có lớp",
-      t: row.start_time || "00:00:00"
+      st: row.start_time || "00:00:00",
+      et: row.end_time || "00:00:00",
+      lt: row.late_threshold || "00:00:00"
     }));
 
     const jsonStr = 'SYNC_DB:' + JSON.stringify(payloadArray);
