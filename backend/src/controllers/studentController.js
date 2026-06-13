@@ -1,5 +1,26 @@
 const StudentModel = require('../models/StudentModel');
 
+exports.createStudent = async (req, res) => {
+  const { code, name, rfidUid, classId } = req.body;
+
+  if (!code || !name) {
+    return res.status(400).json({ success: false, message: 'Mã sinh viên và tên là bắt buộc' });
+  }
+
+  try {
+    const result = await StudentModel.createStudent(code, name, rfidUid || null, classId || null);
+    res.status(201).json({
+      success: true,
+      message: 'Thêm sinh viên thành công',
+      data: { student_id: result.student_id }
+    });
+  } catch (error) {
+    console.error('Database error in createStudent:', error);
+    const message = error.sqlMessage || 'Lỗi máy chủ khi thêm sinh viên';
+    res.status(400).json({ success: false, message });
+  }
+};
+
 exports.getAllStudents = async (req, res) => {
   const students = await StudentModel.getAllWithDetails();
   res.json({ success: true, data: students });
@@ -86,25 +107,29 @@ exports.updateStudent = async (req, res) => {
   const { id } = req.params;
   const { name, code, rfidUid } = req.body;
 
-  // Cập nhật thông tin cơ bản
-  if (name && code) {
-    await StudentModel.updateStudent(id, name, code);
+  try {
+    await StudentModel.updateStudent(
+      id,
+      name || null,
+      code || null,
+      rfidUid !== undefined ? rfidUid : null
+    );
+    res.json({ success: true, message: 'Cập nhật sinh viên thành công' });
+  } catch (error) {
+    console.error('Database error in updateStudent:', error);
+    const message = error.sqlMessage || 'Lỗi máy chủ khi cập nhật thông tin';
+    res.status(400).json({ success: false, message });
   }
-  // Cập nhật RFID nếu có truyền lên
-  if (rfidUid !== undefined) {
-    if (rfidUid === '') {
-       // Nếu truyền lên rỗng, có thể xóa liên kết thẻ.
-       // Tuy nhiên hàm assignRfid hiện tại dùng INSERT ON DUPLICATE KEY.
-       // Tạm thời bỏ qua tính năng xóa thẻ để giữ đơn giản, hoặc cập nhật logic nếu cần.
-    } else {
-       await StudentModel.assignRfid(id, rfidUid);
-    }
-  }
-  res.json({ success: true, message: 'Cập nhật sinh viên thành công' });
 };
 
 exports.deleteStudent = async (req, res) => {
   const { id } = req.params;
-  await StudentModel.deleteStudent(id);
-  res.json({ success: true, message: 'Xóa sinh viên thành công' });
+  try {
+    await StudentModel.deleteStudent(id);
+    res.json({ success: true, message: 'Xóa sinh viên thành công' });
+  } catch (error) {
+    console.error('Database error in deleteStudent:', error);
+    const message = error.sqlMessage || 'Lỗi máy chủ khi xóa sinh viên';
+    res.status(400).json({ success: false, message });
+  }
 };

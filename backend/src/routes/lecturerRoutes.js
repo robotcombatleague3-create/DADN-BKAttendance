@@ -17,13 +17,10 @@ router.get('/', lecturerController.getAllLecturers);
 // POST /api/lecturers
 router.post('/', lecturerController.createLecturer);
 
-// PUT /api/lecturers/:userId
-router.put('/:userId', lecturerController.updateLecturer);
+// PUT /api/lecturers/user/:userId
+router.put('/user/:userId', lecturerController.updateLecturer);
 
-// DELETE /api/lecturers/:userId
-router.delete('/:userId', lecturerController.deleteLecturer);
-
-// PUT /api/lecturers/:userId/rfid
-router.put('/:userId/rfid', lecturerController.assignRfid);
+// DELETE /api/lecturers/:lecturerId
+router.delete('/:lecturerId', lecturerController.deleteLecturer);
 
 module.exports = router;
