@@ -8,7 +8,18 @@ const apiFetch = async (url, options = {}) => {
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
-  return fetch(url, { ...options, headers });
+  const response = await fetch(url, { ...options, headers });
+  
+  if (response.status === 401) {
+    // If unauthorized, clear local storage and force redirect to login
+    localStorage.removeItem('token');
+    localStorage.removeItem('role');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('userName');
+    window.location.href = '/';
+  }
+  
+  return response;
 };
 
 export const login = async (email, password) => {
@@ -98,6 +109,13 @@ export const updateStudent = async (studentId, studentData) => {
 export const deleteStudent = async (studentId) => {
   const res = await apiFetch(`${API_URL}/students/${studentId}`, {
     method: 'DELETE'
+  });
+  return res.json();
+};
+
+export const syncHardware = async () => {
+  const res = await apiFetch(`${API_URL}/students/sync-hardware`, {
+    method: 'POST'
   });
   return res.json();
 };

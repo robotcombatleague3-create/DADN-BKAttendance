@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, User, Pencil, Trash2, ChevronLeft, ScanLine } from 'lucide-react';
-import { getStudents, createStudent, updateStudent, deleteStudent } from '../../services/api';
+import { getStudents, createStudent, updateStudent, deleteStudent, syncHardware } from '../../services/api';
 import Pagination from '../../components/Pagination';
 
 export default function AdminStudents() {
@@ -141,8 +141,7 @@ export default function AdminStudents() {
   const handleSyncHardware = async () => {
     if (window.confirm('Bạn có chắc muốn đẩy dữ liệu xuống phần cứng?')) {
       try {
-        const res = await fetch('http://localhost:3000/api/students/sync-hardware', { method: 'POST' });
-        const data = await res.json();
+        const data = await syncHardware();
         if (data.success) {
           alert(data.message);
         } else {
