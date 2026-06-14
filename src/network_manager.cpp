@@ -2,8 +2,8 @@
 #include "user_db.h"
 #include <ArduinoJson.h>
 
-const char* ssid = "Mon & Bom";
-const char* password = "10122000";
+const char* ssid = "Bao Ngoc 4";
+const char* password = "@BaoNgoc4";
 const char* mqtt_topic_pub = "test/vinh/mqtt/send"; 
 const char* mqtt_topic_sub = "test/vinh/mqtt/recv"; 
 
@@ -34,41 +34,64 @@ void mqtt_callback(char* topic, byte* payload, unsigned int length) {
         String jsonStr = message.substring(8);
         JsonDocument doc;
         DeserializationError error = deserializeJson(doc, jsonStr);
+        
         if (!error) {
             JsonArray arr = doc.as<JsonArray>();
             int newTotal = 0;
+            
             for (JsonObject v : arr) {
                 if (newTotal >= MAX_USERS) break;
+                
+                // 1. UID và Index
                 String uidHex = v["u"].as<String>();
                 database[newTotal].uidHash = strtoul(uidHex.c_str(), NULL, 16);
                 database[newTotal].idIndex = v["i"].as<int>();
+                
+                // 2. Tên sinh viên
                 strncpy(database[newTotal].name, v["n"].as<const char*>(), 31);
                 database[newTotal].name[31] = '\0';
+
+                // 3. Tên lớp học (trường "c")
+                strncpy(database[newTotal].className, v["c"].as<const char*>(), 63);
+                database[newTotal].className[63] = '\0';
+
+                // --- BẮT ĐẦU XỬ LÝ THỜI GIAN MỚI ---
+                int h = 0, m = 0, s = 0;
+                
+                // 4. Giờ bắt đầu (trường "st")
+                const char* stStr = v["st"].as<const char*>();
+                if (sscanf(stStr, "%d:%d:%d", &h, &m, &s) == 3) {
+                    database[newTotal].startH = h;
+                    database[newTotal].startM = m;
+                }
+
+                // 5. Giờ kết thúc (trường "et")
+                const char* etStr = v["et"].as<const char*>();
+                if (sscanf(etStr, "%d:%d:%d", &h, &m, &s) == 3) {
+                    database[newTotal].endH = h;
+                    database[newTotal].endM = m;
+                }
+
+                // 6. Giờ cho phép trễ (trường "lt")
+                const char* ltStr = v["lt"].as<const char*>();
+                if (sscanf(ltStr, "%d:%d:%d", &h, &m, &s) == 3) {
+                    database[newTotal].lateH = h;
+                    database[newTotal].lateM = m;
+                }
+                // --- KẾT THÚC XỬ LÝ THỜI GIAN ---
+
                 newTotal++;
+                
+                vTaskDelay(pdMS_TO_TICKS(1)); 
             }
+            
             totalCards = newTotal;
-            Serial.printf("Dong bo thanh cong %d sinh vien\n", totalCards);
+            Serial.printf("Dong bo thanh cong %d sinh vien vao RAM!\n", totalCards);
+            
         } else {
             Serial.print("Loi parse JSON: ");
             Serial.println(error.c_str());
         }
-    }
-    else if (message.startsWith("DEADLINE:")) {
-        shared_deadlineH = message.substring(9, 11).toInt();
-        shared_deadlineM = message.substring(12, 14).toInt();
-        shared_hasDeadline = true;
-        flag_uiUpdateDeadline = true; 
-    } 
-    else if (message.startsWith("ENDTIME:")) {
-        shared_endH = message.substring(8, 10).toInt();
-        shared_endM = message.substring(11, 13).toInt();
-        shared_hasEndTime = true;
-        flag_uiUpdateDeadline = true; // Xài chung cờ để báo màn hình update
-    }
-    // -------------------------------------------
-    else if (message.startsWith("SESSION:")) {
-        shared_currentSession = message.substring(8).toInt();
-        flag_uiUpdateSession = true;
     }
     else {
         strncpy(shared_serverMessage, message.c_str(), sizeof(shared_serverMessage) - 1);
@@ -93,19 +116,52 @@ void mqtt_reconnect() {
     }
 }
 
+void checkAndUpdateActiveSession() {
+    struct tm timeinfo;
+    if (!getLocalTime(&timeinfo)) return;
+    
+    // Đổi thời gian hiện tại ra phút tính từ 00:00
+    int currentMins = timeinfo.tm_hour * 60 + timeinfo.tm_min;
+    bool found = false;
+    
+    xSemaphoreTake(settingsMutex, portMAX_DELAY);
+    for (int i = 0; i < totalCards; i++) {
+        int startMins = database[i].startH * 60 + database[i].startM;
+        int endMins = database[i].endH * 60 + database[i].endM;
+        // Nếu thời gian hiện tại nằm trong khoảng [Trước giờ học 5p] đến [Giờ kết thúc]
+        if (currentMins >= (startMins - 5) && currentMins <= endMins) {
+            strncpy(currentClassName, database[i].className, 63);
+            currentClassName[63] = '\0';
+            currentClassStartH = database[i].startH;
+            currentClassStartM = database[i].startM;
+            currentClassEndH = database[i].endH;
+            currentClassEndM = database[i].endM;
+            found = true;
+            break; 
+        }
+    }
+    hasActiveQuery = found;
+    xSemaphoreGive(settingsMutex);
+}
+
 void networkTask(void *pvParameters) {
     setup_wifi_and_time();
-    client.setBufferSize(16384); // Bắt buộc set buffer lớn để nhận gói JSON 50 SV (~7KB)
+    client.setBufferSize(16384);
     client.setServer(MQTT_BROKER, MQTT_PORT);
     client.setCallback(mqtt_callback);
 
     MqttPayload payload;
+    unsigned long lastCheckTime = 0;
 
     while (1) {
         if (!client.connected()) {
             mqtt_reconnect();
         }
         client.loop(); 
+        if (millis() - lastCheckTime > 5000) {
+            checkAndUpdateActiveSession();
+            lastCheckTime = millis();
+        }
 
         // Rút dữ liệu từ Queue ra gửi (chờ tối đa 50ms để không kẹt MQTT Loop)
         if (xQueueReceive(mqttTxQueue, &payload, pdMS_TO_TICKS(50)) == pdPASS) {
