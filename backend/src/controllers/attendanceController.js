@@ -65,6 +65,7 @@ exports.getClasses = async (req, res) => {
       SELECT 
         c.class_id,
         c.class_name,
+        (SELECT COUNT(*) FROM class_students cs WHERE cs.class_id = c.class_id) as students,
         (SELECT COUNT(*) FROM sessions s WHERE s.class_id = c.class_id AND s.session_date = CURDATE() AND CURTIME() BETWEEN s.start_time AND s.end_time) as is_online
       FROM classes c
       JOIN lecturers l ON c.lecturer_id = l.lecturer_id
@@ -87,6 +88,7 @@ exports.getClasses = async (req, res) => {
         class_code: row.class_id.toString(), // Mã lớp (có thể dùng string ID)
         class_name: className,
         room: room,
+        students: row.students,
         status: row.is_online > 0 ? 'online' : 'offline'
       };
     });

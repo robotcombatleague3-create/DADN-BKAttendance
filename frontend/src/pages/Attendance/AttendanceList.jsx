@@ -22,7 +22,7 @@ export default function AttendanceList() {
           const formatted = data.data.map(c => ({
             ...c,
             status: c.status || 'offline', 
-            students: 0 // Tạm thời để 0 vì chưa có API tổng số sinh viên tại đây
+            students: c.students || 0
           }));
           setClasses(formatted);
         }
