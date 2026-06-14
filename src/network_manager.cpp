@@ -146,7 +146,7 @@ void checkAndUpdateActiveSession() {
 
 void networkTask(void *pvParameters) {
     setup_wifi_and_time();
-    client.setBufferSize(16384);
+    client.setBufferSize(16384); // Bắt buộc set buffer lớn để nhận gói JSON 50 SV (~7KB)
     client.setServer(MQTT_BROKER, MQTT_PORT);
     client.setCallback(mqtt_callback);
 
