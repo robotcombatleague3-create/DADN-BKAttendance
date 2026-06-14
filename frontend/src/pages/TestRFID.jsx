@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { io } from 'socket.io-client';
+import { scanCard } from '../services/api';
 
 const TestRFID = () => {
     const [uid, setUid] = useState('');
@@ -39,17 +40,9 @@ const TestRFID = () => {
         setResultData(null);
 
         try {
-            const response = await fetch('http://localhost:3000/api/attendance/scan', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ rfid_uid: rfidUid }),
-            });
+            const data = await scanCard(rfidUid);
 
-            const data = await response.json();
-
-            if (response.ok && data.success) {
+            if (data.success) {
                 setResultData(data.data);
                 setError(null);
             } else {

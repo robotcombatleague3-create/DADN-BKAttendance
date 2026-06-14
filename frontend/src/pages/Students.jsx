@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, User, Pencil, Trash2, MoreHorizontal, X, ArrowLeft } from 'lucide-react';
-import { getStudents, getStatusClass, getStudentAttendanceHistory, formatDateTime } from '../services/api';
+import { getStudents, getStatusClass, getStudentAttendanceHistory, formatDateTime, syncHardware } from '../services/api';
 import './Students.css';
 
 export default function Students() {
@@ -142,8 +142,7 @@ export default function Students() {
   const handleSyncHardware = async () => {
     if (window.confirm('Bạn có chắc muốn đẩy dữ liệu xuống phần cứng?')) {
       try {
-        const res = await fetch('http://localhost:3000/api/students/sync-hardware', { method: 'POST' });
-        const data = await res.json();
+        const data = await syncHardware();
         if (data.success) {
           alert(data.message);
         } else {

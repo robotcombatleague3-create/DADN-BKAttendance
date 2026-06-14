@@ -190,3 +190,12 @@ export const getLecturerHistory = async (userId) => {
   const data = await res.json();
   return data.data || [];
 };
+
+export const scanCard = async (rfidUid, session = 1) => {
+  const res = await apiFetch(`${API_URL}/attendance/scan`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ rfidUid, session })
+  });
+  return res.json();
+};
